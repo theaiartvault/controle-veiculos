@@ -1,0 +1,25 @@
+{
+  "name": "Controle de Veículos — Portaria",
+  "short_name": "Controle Veículos",
+  "description": "Registro manual de entrada e saída de veículos quando a TAG ou leitura de placa falha.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

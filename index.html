@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10">
+<title>Controle de Veículos — Portaria</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23151922%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22%23ff6a3d%22>🚧</text></svg>">
+<style>
+:root{
+  --bg:#0b0d10;
+  --panel:#13161c;
+  --panel-2:#181c24;
+  --line:#262b35;
+  --text:#eef0f3;
+  --muted:#8b93a3;
+  --accent:#ff6a3d;
+  --accent-dim:#3a2218;
+  --ok:#3ddc84;
+  --ok-dim:#163322;
+  --warn:#ffb84d;
+  --danger:#ff4d6a;
+  --mono:'JetBrains Mono', 'SF Mono', Consolas, monospace;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-user-select:none;user-select:none;}
+body{padding-bottom:env(safe-area-inset-bottom);}
+input,textarea{user-select:text;-webkit-user-select:text;}
+
+/* Topbar */
+.topbar{
+  position:sticky;top:0;z-index:20;
+  background:linear-gradient(180deg,#11141a,#0b0d10);
+  border-bottom:1px solid var(--line);
+  padding:14px 16px calc(10px + env(safe-area-inset-top)/3);
+  padding-top:calc(14px + env(safe-area-inset-top));
+  display:flex;align-items:center;justify-content:space-between;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
+.brand h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.3px;}
+.brand small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:1px;}
+.status-pill{
+  display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
+  background:var(--panel-2);border:1px solid var(--line);border-radius:20px;padding:5px 10px;
+  font-family:var(--mono);
+}
+.status-pill .led{width:6px;height:6px;border-radius:50%;background:var(--ok);}
+.status-pill.offline .led{background:var(--warn);}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;}
+.tab{
+  flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:600;
+  color:var(--muted);background:var(--panel);border:1px solid var(--line);cursor:pointer;white-space:nowrap;
+}
+.tab.active{color:var(--bg);background:var(--accent);border-color:var(--accent);}
+.tab .count{display:inline-block;margin-left:5px;opacity:.75;font-family:var(--mono);font-size:11px;}
+
+main{padding:16px;max-width:560px;margin:0 auto;}
+
+/* Section labels */
+.field-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;}
+.field-label:first-child{margin-top:0;}
+
+/* Toggle: morador / visitante */
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;}
+.seg button{
+  flex:1;padding:13px 0;border:none;background:transparent;color:var(--muted);font-size:14px;font-weight:700;
+  border-radius:9px;transition:.15s;
+}
+.seg button.on.morador{background:var(--ok-dim);color:var(--ok);}
+.seg button.on.visitante{background:var(--accent-dim);color:var(--accent);}
+.seg button.on.prestador{background:#1e1a2e;color:#b88fff;}
+
+/* Torre grid */
+.torre-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.torre-btn{
+  aspect-ratio:1;border:1px solid var(--line);background:var(--panel);color:var(--text);
+  border-radius:12px;font-size:18px;font-weight:700;font-family:var(--mono);
+}
+.torre-btn.on{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
+
+/* Inputs */
+.input-row{display:flex;gap:10px;}
+.input-wrap{flex:1;}
+input[type=text],input[type=number]{
+  width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:14px 14px;font-size:16px;font-family:inherit;
+}
+input::placeholder{color:#566;opacity:.6;}
+input:focus{outline:none;border-color:var(--accent);}
+#placaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
+.placa-hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);}
+.suggest-box{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
+.suggest-item{
+  background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;
+  font-size:13px;color:var(--muted);display:flex;justify-content:space-between;
+}
+.suggest-item b{color:var(--text);font-weight:600;}
+
+/* Submit */
+.submit-btn{
+  width:100%;margin-top:22px;padding:17px;border:none;border-radius:14px;
+  background:var(--accent);color:#1a0d06;font-size:16px;font-weight:800;letter-spacing:.3px;
+  box-shadow:0 6px 18px -6px rgba(255,106,61,.5);
+}
+.submit-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
+.submit-btn:active:not(:disabled){transform:scale(.98);}
+
+.hint-banner{
+  background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;
+  font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;
+}
+
+/* Lists */
+.search-bar{margin-bottom:12px;}
+.search-bar input{font-size:14px;padding:11px 14px;}
+.list-empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;}
+.list-empty .big{font-size:32px;display:block;margin-bottom:10px;opacity:.5;}
+
+.card{
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;
+  display:flex;gap:12px;align-items:flex-start;
+}
+.card.saiu{opacity:.55;}
+.card .tag{
+  width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:15px;flex-shrink:0;font-family:var(--mono);
+}
+.card .tag.morador{background:var(--ok-dim);color:var(--ok);}
+.card .tag.visitante{background:var(--accent-dim);color:var(--accent);}
+.card .tag.prestador{background:#1e1a2e;color:#b88fff;}
+
+/* Campo documento (RG/CPF) */
+.doc-block{margin-top:14px;}
+.doc-toggle{display:flex;gap:8px;margin-bottom:8px;}
+.doc-toggle button{
+  flex:1;padding:11px 6px;border-radius:10px;border:1px solid var(--line);
+  background:var(--panel);color:var(--muted);font-size:13px;font-weight:600;
+}
+.doc-toggle button.on{background:#1e1a2e;color:#b88fff;border-color:#b88fff44;}
+.doc-toggle button.on.nao-info{background:var(--panel-2);color:var(--muted);border-color:var(--line);}
+#docInput{width:100%;font-family:var(--mono);font-size:15px;letter-spacing:.5px;}
+.doc-badge{
+  display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
+  background:#1e1a2e;color:#b88fff;font-family:var(--mono);
+}
+.doc-badge.nao-info{background:var(--panel-2);color:var(--muted);}
+.card .body{flex:1;min-width:0;}
+.card .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
+.card .placa{font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:1px;}
+.card .hora{font-size:11px;color:var(--muted);font-family:var(--mono);white-space:nowrap;}
+.card .meta{font-size:13px;color:var(--muted);margin-top:3px;}
+.card .meta b{color:var(--text);font-weight:600;}
+.card .status-line{font-size:11px;margin-top:6px;color:var(--muted);}
+.card .status-line.dentro{color:var(--ok);}
+.btn-saida{
+  border:1px solid var(--line);background:var(--panel-2);color:var(--text);
+  border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;white-space:nowrap;
+}
+.btn-saida:active{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
+
+.day-divider{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;padding-left:2px;}
+
+/* Footer actions */
+.footer-actions{display:flex;gap:10px;margin-top:18px;}
+.btn-sec{
+  flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
+  color:var(--text);font-size:13px;font-weight:700;
+}
+.btn-sec.danger{color:var(--danger);}
+
+/* Install banner */
+.install-bar{
+  position:fixed;left:16px;right:16px;bottom:16px;z-index:30;
+  background:var(--panel-2);border:1px solid var(--accent);border-radius:14px;padding:13px 14px;
+  display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px -10px #000;
+}
+.install-bar.hidden{display:none;}
+.install-bar span{flex:1;font-size:12.5px;color:var(--text);line-height:1.4;}
+.install-bar button{background:var(--accent);border:none;color:#1a0d06;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:9px;white-space:nowrap;}
+.install-bar .close{background:transparent;color:var(--muted);font-size:18px;padding:0 4px;}
+
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  background:#1d2230;border:1px solid var(--accent);color:var(--text);
+  padding:11px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:50;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+
+::-webkit-scrollbar{display:none;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <h1>Controle de Veículos</h1>
+      <small>Viva Mais Barueri · Portaria</small>
+    </div>
+  </div>
+  <div class="status-pill" id="statusPill"><span class="led"></span><span id="statusText">online</span></div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="novo">Novo registro</div>
+  <div class="tab" data-tab="dentro">No pátio <span class="count" id="countDentro">0</span></div>
+  <div class="tab" data-tab="historico">Histórico</div>
+</div>
+
+<main>
+
+  <!-- ABA: NOVO REGISTRO -->
+  <section id="tab-novo">
+    <div class="hint-banner">Use quando a TAG ou a leitura de placa falhar. Preencha e registre — o veículo entra na lista "No pátio" até você marcar a saída.</div>
+
+    <div class="field-label">Tipo</div>
+    <div class="seg" id="segTipo">
+      <button class="on morador" data-val="morador">🏠 Morador</button>
+      <button class="visitante" data-val="visitante">🚪 Visitante</button>
+      <button class="prestador" data-val="prestador">🔧 Prestador</button>
+    </div>
+
+    <div class="field-label">Torre</div>
+    <div class="torre-grid" id="torreGrid"></div>
+
+    <div class="field-label">Detalhes</div>
+    <div class="input-row">
+      <div class="input-wrap" style="flex:0 0 110px;">
+        <input type="number" id="aptoInput" placeholder="Apto" inputmode="numeric">
+      </div>
+      <div class="input-wrap">
+        <input type="text" id="nomeInput" placeholder="Nome do morador" autocomplete="off">
+      </div>
+    </div>
+    <div class="suggest-box" id="suggestBox"></div>
+
+    <div class="field-label" id="placaLabel">Placa</div>
+    <input type="text" id="placaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
+    <div class="placa-hint" id="placaHint">Aceita formato antigo e Mercosul</div>
+
+    <!-- Bloco de documento — aparece só para Visitante e Prestador -->
+    <div class="doc-block" id="docBlock" style="display:none;">
+      <div class="field-label">Documento</div>
+      <div class="doc-toggle" id="docToggle">
+        <button class="on" data-doc="informar" id="docBtnInformar">📋 Informar RG / CPF</button>
+        <button data-doc="nao" id="docBtnNao" class="nao-info">🚫 Não informado</button>
+      </div>
+      <input type="text" id="docInput" placeholder="RG ou CPF do visitante" inputmode="numeric" autocomplete="off">
+    </div>
+
+    <button class="submit-btn" id="submitBtn">Registrar entrada</button>
+  </section>
+
+  <!-- ABA: NO PÁTIO -->
+  <section id="tab-dentro" style="display:none;">
+    <div class="search-bar">
+      <input type="text" id="searchDentro" placeholder="Buscar por placa, torre, apto ou nome…">
+    </div>
+    <div id="listDentro"></div>
+  </section>
+
+  <!-- ABA: HISTÓRICO -->
+  <section id="tab-historico" style="display:none;">
+    <div class="search-bar">
+      <input type="text" id="searchHistorico" placeholder="Buscar por placa, torre, apto ou nome…">
+    </div>
+    <div id="listHistorico"></div>
+    <div class="footer-actions">
+      <button class="btn-sec" id="exportPdfBtn">📄 Exportar PDF</button>
+      <button class="btn-sec danger" id="clearBtn">🗑 Limpar tudo</button>
+    </div>
+  </section>
+
+</main>
+
+<div class="install-bar hidden" id="installBar">
+  <span>Instale este app na tela inicial para usar como um app normal, mesmo sem internet.</span>
+  <button id="installBtn">Instalar</button>
+  <button class="close" id="installClose">✕</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
