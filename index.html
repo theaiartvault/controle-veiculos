@@ -2,292 +2,987 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0b0d10">
-<title>Controle de Veículos — Portaria</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Controle de Chaves — Viva Mais Barueri</title>
+
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23151922%22/><text x=%2250%22 y=%2266%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22%23ff6a3d%22>🚧</text></svg>">
+<meta name="theme-color" content="#0e1015">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Chaves">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <style>
-:root{
-  --bg:#0b0d10;
-  --panel:#13161c;
-  --panel-2:#181c24;
-  --line:#262b35;
-  --text:#eef0f3;
-  --muted:#8b93a3;
-  --accent:#ff6a3d;
-  --accent-dim:#3a2218;
-  --ok:#3ddc84;
-  --ok-dim:#163322;
-  --warn:#ffb84d;
-  --danger:#ff4d6a;
-  --mono:'JetBrains Mono', 'SF Mono', Consolas, monospace;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-user-select:none;user-select:none;}
-body{padding-bottom:env(safe-area-inset-bottom);}
-input,textarea{user-select:text;-webkit-user-select:text;}
+  :root{
+    --bg: #0e1015;
+    --bg-panel: #161922;
+    --bg-panel-2: #1d212c;
+    --line: #2a2f3d;
+    --text: #e8e6e1;
+    --text-dim: #8e93a3;
+    --text-faint: #5a5f6e;
+    --accent: #d4ff4f;
+    --danger: #ff6b6b;
+    --danger-bg: #2a1518;
+    --ok: #4fd4a8;
+    --ok-bg: #122621;
 
-/* Topbar */
-.topbar{
-  position:sticky;top:0;z-index:20;
-  background:linear-gradient(180deg,#11141a,#0b0d10);
-  border-bottom:1px solid var(--line);
-  padding:14px 16px calc(10px + env(safe-area-inset-top)/3);
-  padding-top:calc(14px + env(safe-area-inset-top));
-  display:flex;align-items:center;justify-content:space-between;
-}
-.brand{display:flex;align-items:center;gap:10px;}
-.brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
-.brand h1{font-size:15px;margin:0;font-weight:700;letter-spacing:.3px;}
-.brand small{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:1px;}
-.status-pill{
-  display:flex;align-items:center;gap:6px;font-size:11px;color:var(--muted);
-  background:var(--panel-2);border:1px solid var(--line);border-radius:20px;padding:5px 10px;
-  font-family:var(--mono);
-}
-.status-pill .led{width:6px;height:6px;border-radius:50%;background:var(--ok);}
-.status-pill.offline .led{background:var(--warn);}
+    --rosa: #e8a0a8;
+    --rosa-bg: #2a1a1e;
+    --branca: #f4f1ea;
+    --branca-bg: #1f1f1d;
+    --azul: #7fb3c9;
+    --azul-bg: #131e24;
+    --amarela: #e8c547;
+    --amarela-bg: #262111;
 
-/* Tabs */
-.tabs{display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;}
-.tab{
-  flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:600;
-  color:var(--muted);background:var(--panel);border:1px solid var(--line);cursor:pointer;white-space:nowrap;
-}
-.tab.active{color:var(--bg);background:var(--accent);border-color:var(--accent);}
-.tab .count{display:inline-block;margin-left:5px;opacity:.75;font-family:var(--mono);font-size:11px;}
+    --radius: 14px;
+    --mono: 'SF Mono', 'Roboto Mono', ui-monospace, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
 
-main{padding:16px;max-width:560px;margin:0 auto;}
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family:var(--sans); }
+  body{ padding-bottom: 90px; }
 
-/* Section labels */
-.field-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;}
-.field-label:first-child{margin-top:0;}
+  ::selection{ background: var(--accent); color: #0e1015; }
 
-/* Toggle: morador / visitante */
-.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;}
-.seg button{
-  flex:1;padding:13px 0;border:none;background:transparent;color:var(--muted);font-size:14px;font-weight:700;
-  border-radius:9px;transition:.15s;
-}
-.seg button.on.morador{background:var(--ok-dim);color:var(--ok);}
-.seg button.on.visitante{background:var(--accent-dim);color:var(--accent);}
-.seg button.on.prestador{background:#1e1a2e;color:#b88fff;}
+  .app{ max-width: 720px; margin: 0 auto; min-height: 100vh; }
 
-/* Torre grid */
-.torre-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
-.torre-btn{
-  aspect-ratio:1;border:1px solid var(--line);background:var(--panel);color:var(--text);
-  border-radius:12px;font-size:18px;font-weight:700;font-family:var(--mono);
-}
-.torre-btn.on{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
+  /* HEADER */
+  header{
+    position: sticky; top:0; z-index: 50;
+    background: linear-gradient(180deg, var(--bg) 70%, transparent);
+    padding: 18px 16px 10px;
+  }
+  .header-top{ display:flex; justify-content:space-between; align-items:baseline; }
+  .brand{
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+    color: var(--text-faint); text-transform: uppercase;
+  }
+  h1{
+    margin: 2px 0 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em;
+  }
+  .shift-clock{
+    font-family: var(--mono); font-size: 13px; color: var(--accent); text-align:right;
+  }
+  .shift-clock small{ display:block; color: var(--text-faint); font-size: 10px; font-weight: 400; }
 
-/* Inputs */
-.input-row{display:flex;gap:10px;}
-.input-wrap{flex:1;}
-input[type=text],input[type=number]{
-  width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);
-  border-radius:12px;padding:14px 14px;font-size:16px;font-family:inherit;
-}
-input::placeholder{color:#566;opacity:.6;}
-input:focus{outline:none;border-color:var(--accent);}
-#placaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
-.placa-hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);}
-.suggest-box{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
-.suggest-item{
-  background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;
-  font-size:13px;color:var(--muted);display:flex;justify-content:space-between;
-}
-.suggest-item b{color:var(--text);font-weight:600;}
+  /* SUMMARY STRIP */
+  .summary-strip{
+    display:flex; gap:8px; padding: 14px 16px 4px; overflow-x:auto;
+    scrollbar-width: none;
+  }
+  .summary-strip::-webkit-scrollbar{ display:none; }
+  .sum-card{
+    flex: 0 0 auto; min-width: 92px;
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: 12px;
+    padding: 10px 12px;
+  }
+  .sum-card .n{ font-family: var(--mono); font-size: 20px; font-weight: 700; line-height:1; }
+  .sum-card .l{ font-size: 10px; color: var(--text-dim); margin-top:4px; letter-spacing:0.02em; text-transform:uppercase; }
+  .sum-card.alert .n{ color: var(--danger); }
+  .sum-card.alert{ border-color: rgba(255,107,107,0.4); }
 
-/* Submit */
-.submit-btn{
-  width:100%;margin-top:22px;padding:17px;border:none;border-radius:14px;
-  background:var(--accent);color:#1a0d06;font-size:16px;font-weight:800;letter-spacing:.3px;
-  box-shadow:0 6px 18px -6px rgba(255,106,61,.5);
-}
-.submit-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
-.submit-btn:active:not(:disabled){transform:scale(.98);}
+  /* TABS */
+  .tabs{
+    display:flex; gap: 6px; padding: 14px 16px 10px; position: sticky; top: 0; z-index: 40;
+    background: var(--bg);
+  }
+  .tab{
+    flex:1; text-align:center; padding: 10px 6px; border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: var(--text-dim);
+    background: var(--bg-panel); border: 1px solid var(--line); cursor:pointer;
+  }
+  .tab.active{ background: var(--accent); color: #0e1015; border-color: var(--accent); }
 
-.hint-banner{
-  background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;
-  font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;
-}
+  main{ padding: 4px 16px 24px; }
 
-/* Lists */
-.search-bar{margin-bottom:12px;}
-.search-bar input{font-size:14px;padding:11px 14px;}
-.list-empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;}
-.list-empty .big{font-size:32px;display:block;margin-bottom:10px;opacity:.5;}
+  /* SEARCH/FILTER BAR */
+  .filter-bar{ display:flex; gap:8px; margin-bottom: 14px; }
+  .search-input{
+    flex:1; background: var(--bg-panel); border:1px solid var(--line); border-radius: 10px;
+    padding: 10px 12px; color: var(--text); font-size: 14px; font-family: var(--sans);
+  }
+  .search-input::placeholder{ color: var(--text-faint); }
+  .filter-pills{ display:flex; gap:6px; flex-wrap:wrap; margin-bottom: 14px; }
+  .pill{
+    font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 100px;
+    border: 1px solid var(--line); color: var(--text-dim); cursor:pointer; background:var(--bg-panel);
+  }
+  .pill.active{ color: #0e1015; }
+  .pill[data-cor="todas"].active{ background: var(--text); border-color: var(--text); }
+  .pill[data-cor="rosa"].active{ background: var(--rosa); border-color: var(--rosa); }
+  .pill[data-cor="branca"].active{ background: var(--branca); border-color: var(--branca); }
+  .pill[data-cor="azul"].active{ background: var(--azul); border-color: var(--azul); }
+  .pill[data-cor="amarela"].active{ background: var(--amarela); border-color: var(--amarela); }
+  .pill[data-cor="fora"].active{ background: var(--danger); border-color: var(--danger); color: #fff; }
 
-.card{
-  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;
-  display:flex;gap:12px;align-items:flex-start;
-}
-.card.saiu{opacity:.55;}
-.card .tag{
-  width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;
-  font-weight:800;font-size:15px;flex-shrink:0;font-family:var(--mono);
-}
-.card .tag.morador{background:var(--ok-dim);color:var(--ok);}
-.card .tag.visitante{background:var(--accent-dim);color:var(--accent);}
-.card .tag.prestador{background:#1e1a2e;color:#b88fff;}
+  /* KEY LIST */
+  .key-list{ display:flex; flex-direction:column; gap:8px; }
+  .key-row{
+    display:flex; align-items:center; gap:12px;
+    background: var(--bg-panel); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 12px 14px; cursor: pointer;
+  }
+  .key-row:active{ background: var(--bg-panel-2); }
+  .key-swatch{
+    flex: 0 0 40px; height: 40px; border-radius: 10px;
+    display:flex; align-items:center; justify-content:center;
+    font-family: var(--mono); font-weight:800; font-size: 13px; color: #0e1015;
+  }
+  .key-info{ flex:1; min-width:0; }
+  .key-info .nome{ font-size: 14px; font-weight: 600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .key-info .meta{ font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+  .key-status{ flex: 0 0 auto; text-align: right; }
+  .status-dot{
+    display:inline-flex; align-items:center; gap:6px; font-size:11px; font-weight:700;
+    padding: 4px 10px; border-radius: 100px;
+  }
+  .status-dot.na-portaria{ background: var(--ok-bg); color: var(--ok); }
+  .status-dot.em-uso{ background: var(--danger-bg); color: var(--danger); }
+  .status-dot .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+  .key-status .tempo{ font-family: var(--mono); font-size:10px; color: var(--text-faint); margin-top:4px; }
 
-/* Campo documento (RG/CPF) */
-.doc-block{margin-top:14px;}
-.doc-toggle{display:flex;gap:8px;margin-bottom:8px;}
-.doc-toggle button{
-  flex:1;padding:11px 6px;border-radius:10px;border:1px solid var(--line);
-  background:var(--panel);color:var(--muted);font-size:13px;font-weight:600;
-}
-.doc-toggle button.on{background:#1e1a2e;color:#b88fff;border-color:#b88fff44;}
-.doc-toggle button.on.nao-info{background:var(--panel-2);color:var(--muted);border-color:var(--line);}
-#docInput{width:100%;font-family:var(--mono);font-size:15px;letter-spacing:.5px;}
-.doc-badge{
-  display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;
-  background:#1e1a2e;color:#b88fff;font-family:var(--mono);
-}
-.doc-badge.nao-info{background:var(--panel-2);color:var(--muted);}
-.card .body{flex:1;min-width:0;}
-.card .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
-.card .placa{font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:1px;}
-.card .hora{font-size:11px;color:var(--muted);font-family:var(--mono);white-space:nowrap;}
-.card .meta{font-size:13px;color:var(--muted);margin-top:3px;}
-.card .meta b{color:var(--text);font-weight:600;}
-.card .status-line{font-size:11px;margin-top:6px;color:var(--muted);}
-.card .status-line.dentro{color:var(--ok);}
-.btn-saida{
-  border:1px solid var(--line);background:var(--panel-2);color:var(--text);
-  border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;white-space:nowrap;
-}
-.btn-saida:active{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
+  .empty-state{ text-align:center; padding: 60px 20px; color: var(--text-faint); }
+  .empty-state .big{ font-size: 32px; margin-bottom: 8px; }
 
-.day-divider{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;padding-left:2px;}
+  /* MODAL / SHEET */
+  .sheet-overlay{
+    position: fixed; inset:0; background: rgba(0,0,0,0.6); z-index: 100;
+    display:none; align-items:flex-end; justify-content:center;
+  }
+  .sheet-overlay.open{ display:flex; }
+  .sheet{
+    background: var(--bg-panel); border-radius: 20px 20px 0 0; width:100%; max-width:720px;
+    padding: 20px 18px calc(20px + env(safe-area-inset-bottom));
+    max-height: 88vh; overflow-y: auto;
+    animation: slideUp 0.22s ease-out;
+    border-top: 1px solid var(--line);
+  }
+  @keyframes slideUp{ from{ transform: translateY(30px); opacity:0; } to{ transform: translateY(0); opacity:1; } }
+  .sheet-handle{ width: 36px; height:4px; background: var(--line); border-radius: 4px; margin: 0 auto 16px; }
+  .sheet-title{ display:flex; align-items:center; gap:10px; margin-bottom: 4px; }
+  .sheet-swatch{ width: 36px; height:36px; border-radius:9px; flex:0 0 36px; }
+  .sheet-title h2{ font-size:17px; margin:0; }
+  .sheet-title .sub{ font-size: 12px; color: var(--text-dim); }
 
-/* Footer actions */
-.footer-actions{display:flex;gap:10px;margin-top:18px;}
-.btn-sec{
-  flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);
-  color:var(--text);font-size:13px;font-weight:700;
-}
-.btn-sec.danger{color:var(--danger);}
+  .sheet-section{ margin-top: 18px; }
+  .sheet-label{ font-size: 11px; color: var(--text-dim); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:8px; font-weight:600; }
 
-/* Install banner */
-.install-bar{
-  position:fixed;left:16px;right:16px;bottom:16px;z-index:30;
-  background:var(--panel-2);border:1px solid var(--accent);border-radius:14px;padding:13px 14px;
-  display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px -10px #000;
-}
-.install-bar.hidden{display:none;}
-.install-bar span{flex:1;font-size:12.5px;color:var(--text);line-height:1.4;}
-.install-bar button{background:var(--accent);border:none;color:#1a0d06;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:9px;white-space:nowrap;}
-.install-bar .close{background:transparent;color:var(--muted);font-size:18px;padding:0 4px;}
+  .seg-control{ display:flex; gap:6px; background: var(--bg); border-radius: 10px; padding:4px; flex-wrap: wrap; }
+  .seg-btn{ flex:1; min-width: calc(50% - 10px); text-align:center; padding:9px 4px; border-radius:8px; font-size:13px; font-weight:600; color:var(--text-dim); cursor:pointer; }
+  .seg-btn.active{ background: var(--accent); color:#0e1015; }
 
-.toast{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
-  background:#1d2230;border:1px solid var(--accent);color:var(--text);
-  padding:11px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:50;
-  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;
-}
-.toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
+  input[type=text], input[type=time], select, textarea{
+    width:100%; background: var(--bg); border:1px solid var(--line); border-radius: 10px;
+    padding: 11px 12px; color: var(--text); font-size: 14px; font-family: var(--sans); margin-top: 6px;
+  }
+  textarea{ resize: vertical; min-height: 50px; }
 
-::-webkit-scrollbar{display:none;}
+  .btn-primary{
+    width:100%; padding: 14px; border-radius: 12px; border:none; font-size:15px; font-weight:700;
+    margin-top: 20px; cursor:pointer;
+  }
+  .btn-primary.retirar{ background: var(--accent); color: #0e1015; }
+  .btn-primary.devolver{ background: var(--ok); color: #0e1015; }
+  .btn-secondary{
+    width:100%; padding: 12px; border-radius: 12px; border:1px solid var(--line); background:transparent;
+    color: var(--text-dim); font-size:13px; font-weight:600; margin-top:10px; cursor:pointer;
+  }
+
+  .history-item{
+    display:flex; justify-content:space-between; gap:10px; padding: 10px 0;
+    border-bottom: 1px solid var(--line); font-size:12.5px;
+  }
+  .history-item:last-child{ border-bottom:none; }
+  .history-item .h-left{ color: var(--text); }
+  .history-item .h-who{ font-weight:600; }
+  .history-item .h-right{ color: var(--text-faint); font-family: var(--mono); text-align:right; white-space:nowrap; }
+  .history-empty{ color: var(--text-faint); font-size: 13px; text-align:center; padding: 14px 0; }
+
+  .pending-banner{
+    background: var(--danger-bg); border: 1px solid rgba(255,107,107,0.3); border-radius: 10px;
+    padding: 10px 12px; font-size: 12px; color: var(--danger); margin-bottom: 14px; display:flex; gap:8px; align-items:flex-start;
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav{
+    position: fixed; bottom:0; left:0; right:0; z-index: 60;
+    display:flex; justify-content:center;
+    background: linear-gradient(0deg, var(--bg) 60%, transparent);
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom));
+  }
+  .bottom-nav-inner{ max-width: 720px; width:100%; }
+
+  .toast{
+    position: fixed; bottom: 100px; left:50%; transform: translateX(-50%);
+    background: var(--bg-panel-2); border:1px solid var(--line); color: var(--text);
+    padding: 10px 18px; border-radius: 100px; font-size: 13px; z-index: 200;
+    opacity:0; transition: opacity 0.2s, transform 0.2s; pointer-events:none;
+  }
+  .toast.show{ opacity:1; transform: translateX(-50%) translateY(-6px); }
+
+  .loading-state{ text-align:center; padding: 60px 0; color: var(--text-faint); font-size:13px; }
+
+  /* RESUMO TAB */
+  .resumo-card{
+    background: var(--bg-panel); border:1px solid var(--line); border-radius: var(--radius);
+    padding: 16px; margin-bottom: 12px;
+  }
+  .resumo-card-head{ display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .resumo-card-head .sw{ width:28px; height:28px; border-radius:8px; }
+  .resumo-card-head h3{ margin:0; font-size:15px; }
+  .resumo-card-head .count{ margin-left:auto; font-family:var(--mono); font-size:13px; color:var(--text-dim); }
+  .resumo-bar{ height:8px; background: var(--bg); border-radius:100px; overflow:hidden; }
+  .resumo-bar-fill{ height:100%; border-radius:100px; }
+  .resumo-list-fora{ margin-top: 10px; display:flex; flex-wrap:wrap; gap:6px; }
+  .chip-fora{
+    font-family: var(--mono); font-size: 11px; background: var(--danger-bg); color: var(--danger);
+    padding: 3px 9px; border-radius: 100px; border: 1px solid rgba(255,107,107,0.25);
+  }
+
+  /* HEADER ACTIONS */
+  .header-actions{ display:flex; gap:8px; margin-top: 12px; }
+  .header-btn{
+    flex:1; display:flex; align-items:center; justify-content:center; gap:6px;
+    background: var(--bg-panel); border:1px solid var(--line); border-radius: 10px;
+    padding: 10px 8px; font-size: 12.5px; font-weight:600; color: var(--text-dim); cursor:pointer;
+  }
+  .header-btn.primary{ color: var(--accent); border-color: rgba(212,255,79,0.3); }
+  .header-btn svg{ width:15px; height:15px; flex:0 0 15px; }
+  .header-btn.hidden{ display:none; }
+
+  /* PRINT REPORT (hidden on screen, shown only on print) */
+  #printReport{ display:none; }
+
+  @media print{
+    body{ background:#fff !important; padding:0; }
+    .app, header, .summary-strip, .tabs, main, .bottom-nav, .toast, .sheet-overlay{ display:none !important; }
+    #printReport{
+      display:block !important; background:#fff; color:#111; font-family: Arial, Helvetica, sans-serif;
+      padding: 0; margin:0;
+    }
+    .pr-header{ border-bottom: 3px solid #111; padding-bottom: 10px; margin-bottom: 16px; }
+    .pr-header h1{ font-size: 18px; margin: 0 0 4px; }
+    .pr-header .pr-sub{ font-size: 11px; color:#444; }
+    .pr-summary{ display:flex; gap:14px; margin-bottom: 18px; }
+    .pr-sum-box{ flex:1; border:1px solid #999; border-radius:6px; padding:8px 10px; text-align:center; }
+    .pr-sum-box .num{ font-size:20px; font-weight:800; }
+    .pr-sum-box .lbl{ font-size:10px; color:#444; text-transform:uppercase; margin-top:2px; }
+    .pr-sum-box.danger .num{ color:#b00020; }
+    .pr-section-title{ font-size: 13px; font-weight:700; margin: 18px 0 8px; border-bottom:1px solid #ccc; padding-bottom:4px; }
+    table.pr-table{ width:100%; border-collapse: collapse; font-size: 11px; }
+    table.pr-table th, table.pr-table td{ border: 1px solid #ccc; padding: 5px 6px; text-align:left; }
+    table.pr-table th{ background:#eee; font-weight:700; }
+    .pr-empty{ font-size:11px; color:#777; padding: 8px 0; }
+    .pr-badge{ display:inline-block; padding:1px 6px; border-radius:4px; font-size:9.5px; font-weight:700; }
+    .pr-badge.pendente{ background:#fbe1e1; color:#b00020; }
+    .pr-badge.devolvida{ background:#e1f5ec; color:#0a7d4f; }
+    .pr-footer{ margin-top: 24px; font-size: 10px; color:#888; border-top:1px solid #ccc; padding-top:8px; }
+  }
+
+  /* PERIOD SHEET */
+  .period-row{ display:flex; gap:10px; }
+  .period-field{ flex:1; }
+  .period-field label{ font-size:11px; color:var(--text-dim); display:block; margin-bottom:4px; }
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="brand">
-    <div class="dot"></div>
-    <div>
-      <h1>Controle de Veículos</h1>
-      <small>Viva Mais Barueri · Portaria</small>
+<div class="app">
+  <header>
+    <div class="header-top">
+      <div>
+        <div class="brand">Viva Mais Barueri · Olhar Digital</div>
+        <h1>Controle de Chaves</h1>
+      </div>
+      <div class="shift-clock" id="clock">--:--<small id="clock-date">carregando</small></div>
     </div>
+    <div class="header-actions">
+      <div class="header-btn hidden" id="btnInstall">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>
+        Instalar app
+      </div>
+      <div class="header-btn primary" id="btnPrint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9V2h12v7M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2M6 14h12v8H6z"/></svg>
+        Imprimir / Salvar PDF
+      </div>
+    </div>
+  </header>
+
+  <div class="summary-strip" id="summaryStrip"></div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="lista">Chaves</div>
+    <div class="tab" data-tab="resumo">Resumo</div>
+    <div class="tab" data-tab="historico">Histórico</div>
   </div>
-  <div class="status-pill" id="statusPill"><span class="led"></span><span id="statusText">online</span></div>
+
+  <main>
+    <div id="view-lista">
+      <div class="filter-bar">
+        <input type="text" class="search-input" id="searchInput" placeholder="Buscar por nome ou número...">
+      </div>
+      <div class="filter-pills" id="filterPills"></div>
+      <div class="key-list" id="keyList"></div>
+    </div>
+
+    <div id="view-resumo" style="display:none;"></div>
+
+    <div id="view-historico" style="display:none;">
+      <div class="key-list" id="historicoGeral"></div>
+    </div>
+  </main>
 </div>
 
-<div class="tabs">
-  <div class="tab active" data-tab="novo">Novo registro</div>
-  <div class="tab" data-tab="dentro">No pátio <span class="count" id="countDentro">0</span></div>
-  <div class="tab" data-tab="historico">Histórico</div>
-</div>
-
-<main>
-
-  <!-- ABA: NOVO REGISTRO -->
-  <section id="tab-novo">
-    <div class="hint-banner">Use quando a TAG ou a leitura de placa falhar. Preencha e registre — o veículo entra na lista "No pátio" até você marcar a saída.</div>
-
-    <div class="field-label">Tipo</div>
-    <div class="seg" id="segTipo">
-      <button class="on morador" data-val="morador">🏠 Morador</button>
-      <button class="visitante" data-val="visitante">🚪 Visitante</button>
-      <button class="prestador" data-val="prestador">🔧 Prestador</button>
-    </div>
-
-    <div class="field-label">Torre</div>
-    <div class="torre-grid" id="torreGrid"></div>
-
-    <div class="field-label">Detalhes</div>
-    <div class="input-row">
-      <div class="input-wrap" style="flex:0 0 110px;">
-        <input type="number" id="aptoInput" placeholder="Apto" inputmode="numeric">
-      </div>
-      <div class="input-wrap">
-        <input type="text" id="nomeInput" placeholder="Nome do morador" autocomplete="off">
-      </div>
-    </div>
-    <div class="suggest-box" id="suggestBox"></div>
-
-    <div class="field-label" id="placaLabel">Placa</div>
-    <input type="text" id="placaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
-    <div class="placa-hint" id="placaHint">Aceita formato antigo e Mercosul</div>
-
-    <!-- Bloco de documento — aparece só para Visitante e Prestador -->
-    <div class="doc-block" id="docBlock" style="display:none;">
-      <div class="field-label">Documento</div>
-      <div class="doc-toggle" id="docToggle">
-        <button class="on" data-doc="informar" id="docBtnInformar">📋 Informar RG / CPF</button>
-        <button data-doc="nao" id="docBtnNao" class="nao-info">🚫 Não informado</button>
-      </div>
-      <input type="text" id="docInput" placeholder="RG ou CPF do visitante" inputmode="numeric" autocomplete="off">
-    </div>
-
-    <button class="submit-btn" id="submitBtn">Registrar entrada</button>
-  </section>
-
-  <!-- ABA: NO PÁTIO -->
-  <section id="tab-dentro" style="display:none;">
-    <div class="search-bar">
-      <input type="text" id="searchDentro" placeholder="Buscar por placa, torre, apto ou nome…">
-    </div>
-    <div id="listDentro"></div>
-  </section>
-
-  <!-- ABA: HISTÓRICO -->
-  <section id="tab-historico" style="display:none;">
-    <div class="search-bar">
-      <input type="text" id="searchHistorico" placeholder="Buscar por placa, torre, apto ou nome…">
-    </div>
-    <div id="listHistorico"></div>
-    <div class="footer-actions">
-      <button class="btn-sec" id="exportPdfBtn">📄 Exportar PDF</button>
-      <button class="btn-sec danger" id="clearBtn">🗑 Limpar tudo</button>
-    </div>
-  </section>
-
-</main>
-
-<div class="install-bar hidden" id="installBar">
-  <span>Instale este app na tela inicial para usar como um app normal, mesmo sem internet.</span>
-  <button id="installBtn">Instalar</button>
-  <button class="close" id="installClose">✕</button>
+<div class="sheet-overlay" id="sheetOverlay">
+  <div class="sheet" id="sheetContent"></div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="app.js"></script>
+<div id="printReport"></div>
+
+<script>
+const CHAVES_DATA = [
+  { num: 1, nome: "Acessos aos Espaços", cor: "rosa", quemRetira: "morador" },
+  { num: 2, nome: "Society", cor: "rosa", quemRetira: "morador" },
+  { num: 3, nome: "Academia", cor: "rosa", quemRetira: "morador" },
+  { num: 4, nome: "Academia", cor: "rosa", quemRetira: "morador" },
+  { num: 5, nome: "Brinquedoteca", cor: "rosa", quemRetira: "morador" },
+  { num: 6, nome: "Banheiro Piscina", cor: "rosa", quemRetira: "morador" },
+  { num: 7, nome: "Banheiro Academia", cor: "rosa", quemRetira: "morador" },
+  { num: 8, nome: "Cinema", cor: "rosa", quemRetira: "morador" },
+  { num: 9, nome: "Balé", cor: "rosa", quemRetira: "morador" },
+  { num: 10, nome: "Salões de Festa 1 ao 9", cor: "rosa", quemRetira: "morador" },
+  { num: 11, nome: "Piscina", cor: "rosa", quemRetira: "morador" },
+  { num: 12, nome: "Salão de Jogos", cor: "rosa", quemRetira: "morador" },
+  { num: 13, nome: "Banheiro Feminino", cor: "rosa", quemRetira: "morador" },
+  { num: 14, nome: "Salão 2", cor: "rosa", quemRetira: "morador" },
+  { num: 15, nome: "Salão 3", cor: "rosa", quemRetira: "morador" },
+  { num: 16, nome: "Salão 4", cor: "rosa", quemRetira: "morador" },
+  { num: 17, nome: "Salão 1", cor: "rosa", quemRetira: "morador" },
+  { num: 19, nome: "Portas Cinema etc", cor: "rosa", quemRetira: "morador" },
+  { num: 61, nome: "Brinquedoteca 2", cor: "rosa", quemRetira: "morador" },
+  { num: 26, nome: "ADMs 1,2,4,5,6,7,8 e 9", cor: "branca", quemRetira: "equipe" },
+  { num: 27, nome: "Catraca / Portões", cor: "branca", quemRetira: "equipe" },
+  { num: 28, nome: "Pressurização", cor: "branca", quemRetira: "equipe" },
+  { num: 29, nome: "Porta de Vidro", cor: "branca", quemRetira: "equipe" },
+  { num: 30, nome: "Gás", cor: "branca", quemRetira: "equipe" },
+  { num: 31, nome: "Jardim", cor: "branca", quemRetira: "equipe" },
+  { num: 32, nome: "Casa de Bomba / Barrilete", cor: "branca", quemRetira: "equipe" },
+  { num: 33, nome: "ADM 4/8", cor: "branca", quemRetira: "equipe" },
+  { num: 34, nome: "ADM 5/9", cor: "branca", quemRetira: "equipe" },
+  { num: 35, nome: "ADM 7", cor: "branca", quemRetira: "equipe" },
+  { num: 36, nome: "ADM 8", cor: "branca", quemRetira: "equipe" },
+  { num: 37, nome: "ADM 9", cor: "branca", quemRetira: "equipe" },
+  { num: 51, nome: "Elevadores", cor: "azul", quemRetira: "equipe" },
+  { num: 52, nome: "Centro de Medição 1 ao 9", cor: "azul", quemRetira: "equipe" },
+  { num: 53, nome: "Casa de Máquinas", cor: "azul", quemRetira: "equipe" },
+  { num: 54, nome: "DG Telefonia", cor: "azul", quemRetira: "equipe" },
+  { num: 55, nome: "Monitoramento", cor: "azul", quemRetira: "equipe" },
+  { num: 56, nome: "Quadro de Energia", cor: "azul", quemRetira: "equipe" },
+  { num: 57, nome: "Telefonia Central", cor: "azul", quemRetira: "equipe" },
+  { num: 58, nome: "Catracas 58/59", cor: "azul", quemRetira: "equipe" },
+  { num: 59, nome: "Catracas 58/59", cor: "azul", quemRetira: "equipe" },
+  { num: 60, nome: "Centro de Alarme", cor: "azul", quemRetira: "equipe" },
+  { num: 73, nome: "Porta Blindada", cor: "azul", quemRetira: "equipe" },
+  { num: 75, nome: "Salão de Festas 1", cor: "azul", quemRetira: "equipe" },
+  { num: 76, nome: "Barrilete/C. Água 1 ao 9", cor: "amarela", quemRetira: "equipe" },
+  { num: 77, nome: "Casa de Bombas", cor: "amarela", quemRetira: "equipe" },
+  { num: 78, nome: "Cavaletes de Água 1 ao 9", cor: "amarela", quemRetira: "equipe" },
+  { num: 79, nome: "Torneira Piscina", cor: "amarela", quemRetira: "equipe" },
+  { num: 80, nome: "Torneira", cor: "amarela", quemRetira: "equipe" },
+  { num: 81, nome: "Torneira Jardim", cor: "amarela", quemRetira: "equipe" },
+  { num: 82, nome: "Casa de Bombas P1", cor: "amarela", quemRetira: "equipe" },
+  { num: 83, nome: "Poço da Torre 6", cor: "amarela", quemRetira: "equipe" },
+  { num: 84, nome: "Acesso ao Subsolo", cor: "amarela", quemRetira: "equipe" },
+  { num: 85, nome: "Barrilete Torre 8", cor: "amarela", quemRetira: "equipe" },
+  { num: 86, nome: "ADM 2", cor: "amarela", quemRetira: "equipe" },
+  { num: 87, nome: "ADM 6", cor: "amarela", quemRetira: "equipe" },
+  { num: 100, nome: "Chaves Outras", cor: "amarela", quemRetira: "equipe" },
+];
+
+const CORES_INFO = {
+  rosa: { label: "Rosa", hex: "#e8a0a8", desc: "Lazer · liberado p/ moradores" },
+  branca: { label: "Branca", hex: "#f4f1ea", desc: "Administrativo / técnico" },
+  azul: { label: "Azul", hex: "#7fb3c9", desc: "Infraestrutura / máquinas" },
+  amarela: { label: "Amarela", hex: "#e8c547", desc: "Água / estrutura externa" },
+};
+
+const STORAGE_KEY = "chaves-estado-v1";
+const HISTORY_KEY = "chaves-historico-v1";
+
+let state = {}; // { num: { fora: bool, retiradoPor, tipoSolicitante, destino, horaRetirada } }
+let history = []; // [{ num, nome, cor, acao, quem, tipo, destino, hora, dataISO }]
+let currentTab = "lista";
+let currentFilter = "todas";
+let currentSearch = "";
+let activeKeyNum = null;
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 1800);
+}
+
+async function loadData(){
+  try{
+    const s = localStorage.getItem(STORAGE_KEY);
+    state = s ? JSON.parse(s) : {};
+  }catch(e){ state = {}; }
+  try{
+    const h = localStorage.getItem(HISTORY_KEY);
+    history = h ? JSON.parse(h) : [];
+  }catch(e){ history = []; }
+}
+
+async function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+  catch(e){ console.error('Erro ao salvar estado', e); showToast('⚠️ Erro ao salvar'); }
+}
+async function saveHistory(){
+  try{ localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); }
+  catch(e){ console.error('Erro ao salvar histórico', e); }
+}
+
+function fmtTime(d){
+  return d.toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
+}
+function fmtDateShort(d){
+  return d.toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit' });
+}
+function nowISO(){ return new Date().toISOString(); }
+
+function tickClock(){
+  const d = new Date();
+  document.getElementById('clock').childNodes[0].textContent = fmtTime(d) + ' ';
+  document.getElementById('clock-date').textContent = d.toLocaleDateString('pt-BR', { weekday:'short', day:'2-digit', month:'short' });
+}
+
+function tempoFora(horaRetiradaISO){
+  const start = new Date(horaRetiradaISO);
+  const diffMs = Date.now() - start.getTime();
+  const mins = Math.floor(diffMs / 60000);
+  if(mins < 60) return mins + 'min';
+  const h = Math.floor(mins/60);
+  const m = mins % 60;
+  return h + 'h' + (m>0? (m+'m') : '');
+}
+
+function isPlantaoExcedido(horaRetiradaISO){
+  // alerta se a chave está fora há mais de 12h (duração de um plantão)
+  const diffH = (Date.now() - new Date(horaRetiradaISO).getTime()) / 3600000;
+  return diffH >= 12;
+}
+
+function renderSummaryStrip(){
+  const total = CHAVES_DATA.length;
+  const foraCount = Object.values(state).filter(s=>s.fora).length;
+  const pendentes = Object.values(state).filter(s=> s.fora && isPlantaoExcedido(s.horaRetirada)).length;
+  const naPortaria = total - foraCount;
+
+  const cards = [
+    { n: naPortaria, l: 'Na portaria', alert:false },
+    { n: foraCount, l: 'Em uso', alert: foraCount>0 },
+    { n: pendentes, l: 'Pendentes', alert: pendentes>0 },
+    { n: total, l: 'Total chaves', alert:false },
+  ];
+  document.getElementById('summaryStrip').innerHTML = cards.map(c=>`
+    <div class="sum-card ${c.alert?'alert':''}">
+      <div class="n">${c.n}</div>
+      <div class="l">${c.l}</div>
+    </div>
+  `).join('');
+}
+
+function renderFilterPills(){
+  const pills = [
+    {key:'todas', label:'Todas'},
+    {key:'rosa', label:'Rosa'},
+    {key:'branca', label:'Branca'},
+    {key:'azul', label:'Azul'},
+    {key:'amarela', label:'Amarela'},
+    {key:'fora', label:'Em uso'},
+  ];
+  document.getElementById('filterPills').innerHTML = pills.map(p=>`
+    <div class="pill ${currentFilter===p.key?'active':''}" data-cor="${p.key}" onclick="setFilter('${p.key}')">${p.label}</div>
+  `).join('');
+}
+
+function setFilter(f){ currentFilter = f; renderFilterPills(); renderKeyList(); }
+
+function getKeyState(num){
+  return state[num] || { fora:false };
+}
+
+function matchesFilter(k){
+  if(currentFilter==='todas') return true;
+  if(currentFilter==='fora') return getKeyState(k.num).fora;
+  return k.cor === currentFilter;
+}
+function matchesSearch(k){
+  if(!currentSearch) return true;
+  const q = currentSearch.toLowerCase();
+  return k.nome.toLowerCase().includes(q) || String(k.num).includes(q);
+}
+
+function renderKeyList(){
+  const list = CHAVES_DATA.filter(k=> matchesFilter(k) && matchesSearch(k));
+  const container = document.getElementById('keyList');
+  if(list.length===0){
+    container.innerHTML = `<div class="empty-state"><div class="big">🔑</div>Nenhuma chave encontrada</div>`;
+    return;
+  }
+  container.innerHTML = list.map(k=>{
+    const st = getKeyState(k.num);
+    const cor = CORES_INFO[k.cor];
+    const excedido = st.fora && isPlantaoExcedido(st.horaRetirada);
+    return `
+      <div class="key-row" onclick="openKeySheet(${k.num})">
+        <div class="key-swatch" style="background:${cor.hex}">${k.num}</div>
+        <div class="key-info">
+          <div class="nome">${k.nome}</div>
+          <div class="meta">${cor.label} ${k.quemRetira==='morador' ? '· liberada p/ morador' : '· só equipe'}</div>
+        </div>
+        <div class="key-status">
+          ${st.fora
+            ? `<div class="status-dot em-uso"><span class="dot"></span>Em uso</div><div class="tempo">${excedido?'⚠️ ':''}${tempoFora(st.horaRetirada)}</div>`
+            : `<div class="status-dot na-portaria"><span class="dot"></span>Na portaria</div>`
+          }
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderResumo(){
+  const container = document.getElementById('view-resumo');
+  const cores = ['rosa','branca','azul','amarela'];
+  container.innerHTML = cores.map(corKey=>{
+    const cor = CORES_INFO[corKey];
+    const chavesCor = CHAVES_DATA.filter(k=>k.cor===corKey);
+    const foraList = chavesCor.filter(k=> getKeyState(k.num).fora);
+    const pct = Math.round((foraList.length / chavesCor.length) * 100);
+    return `
+      <div class="resumo-card">
+        <div class="resumo-card-head">
+          <div class="sw" style="background:${cor.hex}"></div>
+          <h3>${cor.label}</h3>
+          <div class="count">${foraList.length}/${chavesCor.length} em uso</div>
+        </div>
+        <div class="resumo-bar"><div class="resumo-bar-fill" style="width:${pct}%; background:${cor.hex}"></div></div>
+        ${foraList.length>0 ? `
+          <div class="resumo-list-fora">
+            ${foraList.map(k=>`<div class="chip-fora">#${k.num} ${k.nome}</div>`).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function renderHistorico(){
+  const container = document.getElementById('historicoGeral');
+  if(history.length===0){
+    container.innerHTML = `<div class="empty-state"><div class="big">📋</div>Nenhum registro ainda</div>`;
+    return;
+  }
+  const sorted = [...history].sort((a,b)=> new Date(b.dataISO) - new Date(a.dataISO));
+  container.innerHTML = sorted.slice(0,100).map(h=>{
+    const cor = CORES_INFO[h.cor];
+    const d = new Date(h.dataISO);
+    return `
+      <div class="key-row" style="cursor:default;">
+        <div class="key-swatch" style="background:${cor.hex}">${h.num}</div>
+        <div class="key-info">
+          <div class="nome">${h.nome}</div>
+          <div class="meta">${h.acao==='retirada' ? '🔓 Retirada' : '🔒 Devolução'} · ${h.quem}${h.destino ? ' · '+h.destino : ''}</div>
+        </div>
+        <div class="key-status">
+          <div class="tempo">${fmtDateShort(d)} ${fmtTime(d)}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function switchTab(tab){
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t=> t.classList.toggle('active', t.dataset.tab===tab));
+  document.getElementById('view-lista').style.display = tab==='lista' ? 'block' : 'none';
+  document.getElementById('view-resumo').style.display = tab==='resumo' ? 'block' : 'none';
+  document.getElementById('view-historico').style.display = tab==='historico' ? 'block' : 'none';
+  if(tab==='resumo') renderResumo();
+  if(tab==='historico') renderHistorico();
+}
+
+function closeSheet(){
+  document.getElementById('sheetOverlay').classList.remove('open');
+  activeKeyNum = null;
+}
+
+/* ===================== RELATÓRIO / IMPRESSÃO ===================== */
+
+function todayISODate(){
+  const d = new Date();
+  const off = d.getTimezoneOffset();
+  const local = new Date(d.getTime() - off*60000);
+  return local.toISOString().slice(0,10);
+}
+
+function openPeriodSheet(){
+  const sheet = document.getElementById('sheetContent');
+  const today = todayISODate();
+  sheet.innerHTML = `
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">
+      <div>
+        <h2>Gerar relatório</h2>
+        <div class="sub">Escolha o período para o relatório de movimentação</div>
+      </div>
+    </div>
+
+    <div class="sheet-section">
+      <div class="period-row">
+        <div class="period-field">
+          <label>Data inicial</label>
+          <input type="date" id="dataInicial" value="${today}">
+        </div>
+        <div class="period-field">
+          <label>Data final</label>
+          <input type="date" id="dataFinal" value="${today}">
+        </div>
+      </div>
+    </div>
+
+    <button class="btn-primary retirar" onclick="gerarRelatorio()">Gerar relatório</button>
+    <button class="btn-secondary" onclick="closeSheet()">Cancelar</button>
+  `;
+  document.getElementById('sheetOverlay').classList.add('open');
+}
+
+function gerarRelatorio(){
+  const dataInicialStr = document.getElementById('dataInicial').value;
+  const dataFinalStr = document.getElementById('dataFinal').value;
+  if(!dataInicialStr || !dataFinalStr){
+    showToast('Selecione as duas datas');
+    return;
+  }
+  const inicio = new Date(dataInicialStr + 'T00:00:00');
+  const fim = new Date(dataFinalStr + 'T23:59:59');
+  if(inicio > fim){
+    showToast('Data inicial não pode ser depois da final');
+    return;
+  }
+
+  const eventosPeriodo = history
+    .filter(h => { const d = new Date(h.dataISO); return d >= inicio && d <= fim; })
+    .sort((a,b)=> new Date(a.dataISO) - new Date(b.dataISO));
+
+  const retiradas = eventosPeriodo.filter(h=>h.acao==='retirada');
+  const devolucoes = eventosPeriodo.filter(h=>h.acao==='devolucao');
+
+  // pendentes: chaves que estão fora agora E cuja retirada (a mais recente) ocorreu dentro do período,
+  // OU que continuam fora desde antes do período e ainda não voltaram (relevante p/ o relatório)
+  const pendentesNoPeriodo = Object.entries(state)
+    .filter(([num, st]) => st.fora)
+    .map(([num, st]) => {
+      const k = CHAVES_DATA.find(x=>x.num===Number(num));
+      return { num: Number(num), nome: k ? k.nome : '—', cor: k ? k.cor : '—', ...st };
+    })
+    .filter(p => new Date(p.horaRetirada) <= fim);
+
+  const agora = new Date();
+  const fmtDataHora = (iso) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString('pt-BR') + ' às ' + d.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  };
+  const periodoLabel = dataInicialStr === dataFinalStr
+    ? new Date(inicio).toLocaleDateString('pt-BR')
+    : `${new Date(inicio).toLocaleDateString('pt-BR')} a ${new Date(fim).toLocaleDateString('pt-BR')}`;
+
+  // monta linhas combinando retirada + devolução correspondente quando possível, senão lista solta
+  let linhasTabela = eventosPeriodo.map(h => {
+    const corInfo = CORES_INFO[h.cor] || {label:h.cor};
+    return `
+      <tr>
+        <td>#${h.num}</td>
+        <td>${h.nome}</td>
+        <td>${corInfo.label}</td>
+        <td>${h.acao==='retirada' ? 'Check-out (retirada)' : 'Check-in (devolução)'}</td>
+        <td>${h.quem || '—'}</td>
+        <td>${h.destino || '—'}</td>
+        <td>${fmtDataHora(h.dataISO)}</td>
+      </tr>
+    `;
+  }).join('');
+
+  let linhasPendentes = pendentesNoPeriodo.map(p => {
+    const corInfo = CORES_INFO[p.cor] || {label:p.cor};
+    const horasFora = Math.floor((agora - new Date(p.horaRetirada)) / 3600000);
+    return `
+      <tr>
+        <td>#${p.num}</td>
+        <td>${p.nome}</td>
+        <td>${corInfo.label}</td>
+        <td>${p.retiradoPor || '—'}</td>
+        <td>${p.destino || '—'}</td>
+        <td>${fmtDataHora(p.horaRetirada)}</td>
+        <td><span class="pr-badge pendente">EM ABERTO · ${horasFora}h</span></td>
+      </tr>
+    `;
+  }).join('');
+
+  const report = document.getElementById('printReport');
+  report.innerHTML = `
+    <div class="pr-header">
+      <h1>Relatório de Controle de Chaves</h1>
+      <div class="pr-sub">Condomínio Viva Mais Barueri · Período: ${periodoLabel} · Gerado em ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>
+
+    <div class="pr-summary">
+      <div class="pr-sum-box"><div class="num">${retiradas.length}</div><div class="lbl">Retiradas</div></div>
+      <div class="pr-sum-box"><div class="num">${devolucoes.length}</div><div class="lbl">Devolvidas</div></div>
+      <div class="pr-sum-box danger"><div class="num">${pendentesNoPeriodo.length}</div><div class="lbl">Pendentes (em aberto)</div></div>
+    </div>
+
+    <div class="pr-section-title">Chaves pendentes (ainda não devolvidas)</div>
+    ${pendentesNoPeriodo.length === 0
+      ? '<div class="pr-empty">Nenhuma chave pendente no momento.</div>'
+      : `<table class="pr-table">
+          <thead><tr><th>Nº</th><th>Chave</th><th>Cor</th><th>Retirado por</th><th>Destino/Motivo</th><th>Retirada em</th><th>Status</th></tr></thead>
+          <tbody>${linhasPendentes}</tbody>
+        </table>`
+    }
+
+    <div class="pr-section-title">Movimentações no período (check-out / check-in)</div>
+    ${eventosPeriodo.length === 0
+      ? '<div class="pr-empty">Nenhuma movimentação registrada neste período.</div>'
+      : `<table class="pr-table">
+          <thead><tr><th>Nº</th><th>Chave</th><th>Cor</th><th>Ação</th><th>Responsável</th><th>Destino/Motivo</th><th>Data/Hora</th></tr></thead>
+          <tbody>${linhasTabela}</tbody>
+        </table>`
+    }
+
+    <div class="pr-footer">Relatório gerado automaticamente pelo sistema de Controle de Chaves — Olhar Digital / Condomínio Viva Mais Barueri.</div>
+  `;
+
+  closeSheet();
+  setTimeout(()=> window.print(), 150);
+}
+
+/* ===================== INSTALAÇÃO PWA ===================== */
+
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  const btn = document.getElementById('btnInstall');
+  btn.classList.remove('hidden');
+});
+
+async function tryInstallApp(){
+  if(!deferredInstallPrompt){
+    showToast('Use o menu do navegador: "Adicionar à tela inicial"');
+    return;
+  }
+  deferredInstallPrompt.prompt();
+  const { outcome } = await deferredInstallPrompt.userChoice;
+  if(outcome === 'accepted'){
+    showToast('✅ App instalado!');
+    document.getElementById('btnInstall').classList.add('hidden');
+  }
+  deferredInstallPrompt = null;
+}
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('btnInstall').classList.add('hidden');
+  deferredInstallPrompt = null;
+});
+
+function openKeySheet(num){
+  activeKeyNum = num;
+  const k = CHAVES_DATA.find(x=>x.num===num);
+  const st = getKeyState(num);
+  const cor = CORES_INFO[k.cor];
+  const sheet = document.getElementById('sheetContent');
+
+  const keyHistory = history.filter(h=>h.num===num).sort((a,b)=> new Date(b.dataISO)-new Date(a.dataISO));
+
+  if(!st.fora){
+    // FORM DE RETIRADA
+    const opcoesQuem = k.quemRetira === 'morador'
+      ? ['Morador','Zelador','Manutenção','Prestador de Serviço','Síndico']
+      : ['Zelador','Manutenção','Prestador de Serviço','Síndico'];
+
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">
+        <div class="sheet-swatch" style="background:${cor.hex}"></div>
+        <div>
+          <h2>#${k.num} ${k.nome}</h2>
+          <div class="sub">${cor.label} · ${cor.desc}</div>
+        </div>
+      </div>
+
+      <div class="sheet-section">
+        <div class="sheet-label">Quem está retirando</div>
+        <div class="seg-control" id="segQuem">
+          ${opcoesQuem.map((o,i)=>`<div class="seg-btn ${i===0?'active':''}" data-val="${o}">${o}</div>`).join('')}
+        </div>
+      </div>
+
+      <div class="sheet-section">
+        <div class="sheet-label">Nome (opcional)</div>
+        <input type="text" id="inputNome" placeholder="Nome de quem retirou">
+      </div>
+
+      <div class="sheet-section">
+        <div class="sheet-label">Destino / motivo</div>
+        <input type="text" id="inputDestino" placeholder="Ex: limpeza, manutenção elétrica, uso da quadra...">
+      </div>
+
+      <button class="btn-primary retirar" onclick="confirmarRetirada(${num})">Registrar retirada</button>
+
+      <div class="sheet-section">
+        <div class="sheet-label">Histórico desta chave</div>
+        ${keyHistory.length===0 ? '<div class="history-empty">Sem registros anteriores</div>' :
+          keyHistory.slice(0,8).map(h=>`
+            <div class="history-item">
+              <div class="h-left"><span class="h-who">${h.acao==='retirada'?'🔓':'🔒'} ${h.quem}</span>${h.destino?' — '+h.destino:''}</div>
+              <div class="h-right">${fmtDateShort(new Date(h.dataISO))} ${fmtTime(new Date(h.dataISO))}</div>
+            </div>
+          `).join('')
+        }
+      </div>
+    `;
+
+    document.getElementById('segQuem').querySelectorAll('.seg-btn').forEach(btn=>{
+      btn.onclick = ()=>{
+        document.querySelectorAll('#segQuem .seg-btn').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+      };
+    });
+
+  } else {
+    // INFO DE DEVOLUÇÃO
+    const excedido = isPlantaoExcedido(st.horaRetirada);
+    sheet.innerHTML = `
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">
+        <div class="sheet-swatch" style="background:${cor.hex}"></div>
+        <div>
+          <h2>#${k.num} ${k.nome}</h2>
+          <div class="sub">${cor.label} · ${cor.desc}</div>
+        </div>
+      </div>
+
+      ${excedido ? `<div class="pending-banner">⚠️ Esta chave está fora há mais de 12h. Verifique se ainda está em uso legítimo.</div>` : ''}
+
+      <div class="sheet-section">
+        <div class="sheet-label">Em uso por</div>
+        <div style="font-size:15px; font-weight:600;">${st.retiradoPor}${st.destino ? ' · '+st.destino : ''}</div>
+        <div style="font-size:12px; color:var(--text-dim); margin-top:4px; font-family:var(--mono);">
+          Retirada às ${fmtTime(new Date(st.horaRetirada))} (${tempoFora(st.horaRetirada)} atrás)
+        </div>
+      </div>
+
+      <button class="btn-primary devolver" onclick="confirmarDevolucao(${num})">Registrar devolução</button>
+
+      <div class="sheet-section">
+        <div class="sheet-label">Histórico desta chave</div>
+        ${keyHistory.length===0 ? '<div class="history-empty">Sem registros anteriores</div>' :
+          keyHistory.slice(0,8).map(h=>`
+            <div class="history-item">
+              <div class="h-left"><span class="h-who">${h.acao==='retirada'?'🔓':'🔒'} ${h.quem}</span>${h.destino?' — '+h.destino:''}</div>
+              <div class="h-right">${fmtDateShort(new Date(h.dataISO))} ${fmtTime(new Date(h.dataISO))}</div>
+            </div>
+          `).join('')
+        }
+      </div>
+    `;
+  }
+
+  document.getElementById('sheetOverlay').classList.add('open');
+}
+
+async function confirmarRetirada(num){
+  const k = CHAVES_DATA.find(x=>x.num===num);
+  const quemBtn = document.querySelector('#segQuem .seg-btn.active');
+  const tipo = quemBtn ? quemBtn.dataset.val : 'Equipe';
+  const nome = document.getElementById('inputNome').value.trim();
+  const destino = document.getElementById('inputDestino').value.trim();
+  const quemLabel = nome ? `${tipo} — ${nome}` : tipo;
+  const iso = nowISO();
+
+  state[num] = { fora: true, retiradoPor: quemLabel, tipoSolicitante: tipo, destino, horaRetirada: iso };
+  history.push({ num, nome: k.nome, cor: k.cor, acao:'retirada', quem: quemLabel, tipo, destino, dataISO: iso });
+
+  await saveState();
+  await saveHistory();
+  closeSheet();
+  renderAll();
+  showToast(`🔓 Chave #${num} retirada por ${tipo}`);
+}
+
+async function confirmarDevolucao(num){
+  const k = CHAVES_DATA.find(x=>x.num===num);
+  const st = state[num];
+  const iso = nowISO();
+
+  history.push({ num, nome: k.nome, cor: k.cor, acao:'devolucao', quem: st.retiradoPor, destino: st.destino, dataISO: iso });
+  state[num] = { fora: false };
+
+  await saveState();
+  await saveHistory();
+  closeSheet();
+  renderAll();
+  showToast(`🔒 Chave #${num} devolvida`);
+}
+
+function renderAll(){
+  renderSummaryStrip();
+  renderFilterPills();
+  renderKeyList();
+  if(currentTab==='resumo') renderResumo();
+  if(currentTab==='historico') renderHistorico();
+}
+
+async function init(){
+  document.getElementById('keyList').innerHTML = `<div class="loading-state">Carregando chaves...</div>`;
+  await loadData();
+  renderAll();
+  tickClock();
+  setInterval(tickClock, 1000);
+  setInterval(renderKeyList, 30000); // atualiza "tempo fora" periodicamente
+
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.onclick = ()=> switchTab(t.dataset.tab);
+  });
+  document.getElementById('searchInput').oninput = (e)=>{
+    currentSearch = e.target.value;
+    renderKeyList();
+  };
+  document.getElementById('sheetOverlay').onclick = (e)=>{
+    if(e.target.id==='sheetOverlay') closeSheet();
+  };
+  document.getElementById('btnPrint').onclick = openPeriodSheet;
+  document.getElementById('btnInstall').onclick = tryInstallApp;
+}
+
+init();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(err=> console.warn('SW falhou:', err));
+  });
+}
+</script>
 </body>
 </html>
