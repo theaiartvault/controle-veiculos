@@ -437,29 +437,37 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
   doc.line(marginX, y, pageWidth - marginX, y);
   y += 18;
 
+  // Formato curto: "01/07 13:57" (~55pt com fonte 8pt) para caber nas colunas
+  function fmtCurto(ts) {
+    const d = new Date(ts);
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  // A4 útil: ~515pt entre margens de 40pt cada lado
+  // Distribuição: Tipo(55) Torre(30) Apto(30) Nome(145) Doc(100) Placa(55) Entrada(60) Saída(60) = 535 → ajustado abaixo
   const colX = {
-    tipo:    marginX,
-    torre:   marginX + 62,
-    apto:    marginX + 104,
-    nome:    marginX + 148,
-    doc:     marginX + 278,
-    placa:   marginX + 358,
-    entrada: marginX + 418,
-    saida:   marginX + 468,
+    tipo:    marginX,         //  40 → largura 50
+    torre:   marginX + 52,    //  92 → largura 28
+    apto:    marginX + 82,    // 122 → largura 30
+    nome:    marginX + 114,   // 154 → largura 130
+    doc:     marginX + 246,   // 286 → largura 96
+    placa:   marginX + 344,   // 384 → largura 52
+    entrada: marginX + 398,   // 438 → largura 62
+    saida:   marginX + 462,   // 502 → vai até 555 (dentro dos 555pt úteis)
   };
 
   function header() {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(8.5);
     doc.setTextColor(40);
-    doc.text('Tipo',     colX.tipo,    y);
-    doc.text('Torre',   colX.torre,   y);
-    doc.text('Apto',    colX.apto,    y);
-    doc.text('Nome',    colX.nome,    y);
-    doc.text('Doc.',    colX.doc,     y);
-    doc.text('Placa',   colX.placa,   y);
-    doc.text('Entrada', colX.entrada, y);
-    doc.text('Saída',   colX.saida,   y);
+    doc.text('Tipo',    colX.tipo,    y);
+    doc.text('Torre',  colX.torre,   y);
+    doc.text('Apto',   colX.apto,    y);
+    doc.text('Nome',   colX.nome,    y);
+    doc.text('Doc.',   colX.doc,     y);
+    doc.text('Placa',  colX.placa,   y);
+    doc.text('Entrada',colX.entrada, y);
+    doc.text('Saída',  colX.saida,   y);
     y += 8;
     doc.setDrawColor(220);
     doc.line(marginX, y, pageWidth - marginX, y);
@@ -474,15 +482,18 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
 
   list.slice().reverse().forEach(r => {
     if (y > 760) { doc.addPage(); y = 50; header(); }
-    const docTxt = r.documento ? (r.documento.length > 14 ? r.documento.slice(0, 13) + '…' : r.documento) : '—';
-    doc.text(tipoLabel[r.tipo] || r.tipo, colX.tipo, y);
+    const docTxt = r.documento
+      ? (r.documento.length > 13 ? r.documento.slice(0, 12) + '…' : r.documento)
+      : '—';
+    const nomeTxt = r.nome.length > 18 ? r.nome.slice(0, 17) + '…' : r.nome;
+    doc.text(tipoLabel[r.tipo] || r.tipo, colX.tipo,    y);
     doc.text(String(r.torre),             colX.torre,   y);
     doc.text(String(r.apto),              colX.apto,    y);
-    doc.text(r.nome.length > 18 ? r.nome.slice(0, 17) + '…' : r.nome, colX.nome, y);
+    doc.text(nomeTxt,                     colX.nome,    y);
     doc.text(docTxt,                      colX.doc,     y);
     doc.text(r.placa,                     colX.placa,   y);
-    doc.text(formatDataHora(r.entrada),   colX.entrada, y);
-    doc.text(r.saida ? formatDataHora(r.saida) : '— pátio —', colX.saida, y);
+    doc.text(fmtCurto(r.entrada),         colX.entrada, y);
+    doc.text(r.saida ? fmtCurto(r.saida) : '— pátio', colX.saida, y);
     y += 16;
   });
 
