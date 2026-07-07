@@ -35,25 +35,25 @@ button{cursor:pointer;}
 .status-pill.offline .led{background:var(--warn);}
 
 /* Tabs */
-.tabs{display:flex;gap:5px;padding:10px 12px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;}
-.tab{flex:1;text-align:center;padding:10px 4px;border-radius:10px;font-size:12px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);white-space:nowrap;min-width:0;}
+.tabs{display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;}
+.tab{flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);white-space:nowrap;}
 .tab.active{color:var(--bg);background:var(--accent);border-color:var(--accent);}
-.tab.ocorrencia-tab.active{background:var(--danger);border-color:var(--danger);}
-.tab .count{display:inline-block;margin-left:4px;opacity:.75;font-family:var(--mono);font-size:10px;}
+.tab .count{display:inline-block;margin-left:5px;opacity:.75;font-family:var(--mono);font-size:11px;}
 
 main{padding:16px;max-width:560px;margin:0 auto;}
 
 /* Labels */
 .field-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;}
 .field-label:first-child{margin-top:0;}
+.field-label .opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;}
 
 /* Seg tipo */
-.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;flex-wrap:wrap;}
-.seg button{flex:1;padding:11px 4px;border:none;background:transparent;color:var(--muted);font-size:13px;font-weight:700;border-radius:9px;transition:.15s;min-width:0;}
-.seg button.on.morador{background:var(--ok-dim);color:var(--ok);}
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;}
+.seg button{flex:1;padding:11px 2px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:700;border-radius:9px;transition:.15s;}
+.seg button.on.morador  {background:var(--ok-dim);   color:var(--ok);}
 .seg button.on.visitante{background:var(--accent-dim);color:var(--accent);}
 .seg button.on.prestador{background:var(--purple-dim);color:var(--purple);}
-.seg button.on.naoident{background:var(--danger-dim);color:var(--danger);}
+.seg button.on.naoident {background:var(--danger-dim);color:var(--danger);}
 
 /* Torre */
 .torre-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
@@ -64,7 +64,7 @@ main{padding:16px;max-width:560px;margin:0 auto;}
 .input-row{display:flex;gap:10px;}
 .input-wrap{flex:1;}
 input[type=text],input[type=number],textarea{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;}
-textarea{resize:none;min-height:90px;font-size:14px;line-height:1.5;}
+textarea{resize:none;min-height:85px;font-size:14px;line-height:1.5;}
 input::placeholder,textarea::placeholder{color:#566;opacity:.6;}
 input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 #placaInput,#niPlacaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
@@ -77,16 +77,11 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .submit-btn{width:100%;margin-top:22px;padding:17px;border:none;border-radius:14px;background:var(--accent);color:#1a0d06;font-size:16px;font-weight:800;letter-spacing:.3px;box-shadow:0 6px 18px -6px rgba(255,106,61,.5);}
 .submit-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
 .submit-btn:active:not(:disabled){transform:scale(.98);}
-.submit-btn.danger-btn{background:var(--danger);box-shadow:0 6px 18px -6px rgba(255,77,106,.5);color:#fff;}
 .submit-btn.warn-btn{background:var(--warn);box-shadow:0 6px 18px -6px rgba(255,184,77,.4);color:#1a0d06;}
+.submit-btn.warn-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
 
-/* Banners */
+/* Hint banner */
 .hint-banner{background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
-.hint-banner.danger{border-color:var(--danger);color:var(--danger);}
-.hint-banner.warn{border-color:var(--warn);color:var(--warn);}
-
-/* Observação */
-.obs-block{margin-top:14px;}
 
 /* Documento */
 .doc-block{margin-top:14px;}
@@ -98,27 +93,21 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .doc-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--purple-dim);color:var(--purple);font-family:var(--mono);}
 .doc-badge.nao-info{background:var(--panel-2);color:var(--muted);}
 
-/* Não identificado — banner diferenciado */
-.ni-banner{background:var(--danger-dim);border:1px solid var(--danger);border-radius:12px;padding:14px;margin-bottom:14px;}
-.ni-banner p{margin:0 0 10px;font-size:13px;color:var(--danger);font-weight:600;line-height:1.4;}
-.ni-banner small{color:#ff8a9e;font-size:12px;}
-
-/* Chips de motivo (ocorrência + ni) */
+/* Não identificado */
+.ni-banner{background:var(--danger-dim);border:1px solid var(--danger)55;border-radius:12px;padding:13px 14px;margin-bottom:14px;font-size:12px;color:#ff8a9e;line-height:1.5;}
 .chips{display:flex;flex-wrap:wrap;gap:8px;}
 .chip{padding:9px 13px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:13px;font-weight:600;}
-.chip.on{background:var(--danger-dim);color:var(--danger);border-color:var(--danger);}
+.chip.on{background:var(--danger-dim);color:var(--danger);border-color:var(--danger)55;}
 
 /* Cards */
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;}
 .card.saiu{opacity:.55;}
-.card.card-ni{border-color:var(--danger);background:var(--danger-dim);}
-.card.card-oc{border-color:#ff4d6a55;}
-.card .tag{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.card .tag.morador{background:var(--ok-dim);color:var(--ok);}
+.card.card-ni{border-color:var(--danger)55;}
+.card .tag{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
+.card .tag.morador  {background:var(--ok-dim);   color:var(--ok);}
 .card .tag.visitante{background:var(--accent-dim);color:var(--accent);}
 .card .tag.prestador{background:var(--purple-dim);color:var(--purple);}
-.card .tag.naoident{background:var(--danger-dim);color:var(--danger);}
-.card .tag.ocorrencia{background:var(--danger-dim);color:var(--danger);}
+.card .tag.naoident {background:var(--danger-dim);color:var(--danger);}
 .card .body{flex:1;min-width:0;}
 .card .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
 .card .placa{font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:1px;}
@@ -129,21 +118,20 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .card .status-line{font-size:11px;margin-top:6px;color:var(--muted);}
 .card .status-line.dentro{color:var(--ok);}
 .card .status-line.alerta{color:var(--danger);}
-.card .num-oc{font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:3px;}
 .btn-saida{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;white-space:nowrap;}
 .btn-saida:active{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
-
-/* Listas */
-.search-bar{margin-bottom:12px;}
-.search-bar input{font-size:14px;padding:11px 14px;}
-.list-empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;}
-.list-empty .big{font-size:32px;display:block;margin-bottom:10px;opacity:.5;}
 .day-divider{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;padding-left:2px;}
 
 /* Footer */
 .footer-actions{display:flex;gap:10px;margin-top:18px;}
 .btn-sec{flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13px;font-weight:700;}
 .btn-sec.danger{color:var(--danger);}
+
+/* Lists */
+.search-bar{margin-bottom:12px;}
+.search-bar input{font-size:14px;padding:11px 14px;}
+.list-empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;}
+.list-empty .big{font-size:32px;display:block;margin-bottom:10px;opacity:.5;}
 
 /* Install bar */
 .install-bar{position:fixed;left:16px;right:16px;bottom:16px;z-index:30;background:var(--panel-2);border:1px solid var(--accent);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px -10px #000;}
@@ -153,7 +141,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .install-bar .close{background:transparent;color:var(--muted);font-size:18px;padding:0 4px;}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1d2230;border:1px solid var(--accent);color:var(--text);padding:11px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:50;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1d2230;border:1px solid var(--accent);color:var(--text);padding:11px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:50;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 ::-webkit-scrollbar{display:none;}
 </style>
@@ -172,19 +160,18 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 </div>
 
 <div class="tabs">
-  <div class="tab active"      data-tab="novo">Registro</div>
-  <div class="tab"             data-tab="dentro">Pátio <span class="count" id="countDentro">0</span></div>
-  <div class="tab"             data-tab="historico">Histórico</div>
-  <div class="tab ocorrencia-tab" data-tab="ocorrencias">Ocorr. <span class="count" id="countOc">0</span></div>
+  <div class="tab active" data-tab="novo">Novo registro</div>
+  <div class="tab" data-tab="dentro">No pátio <span class="count" id="countDentro">0</span></div>
+  <div class="tab" data-tab="historico">Histórico</div>
 </div>
 
 <main>
 
   <!-- ABA: NOVO REGISTRO -->
   <section id="tab-novo">
-    <div class="hint-banner">Use quando TAG ou leitura de placa falhar. Para tailgating, use o tipo <b style="color:var(--danger)">Não identificado</b>.</div>
+    <div class="hint-banner">Use quando a TAG ou a leitura de placa falhar. Preencha e registre — o veículo entra na lista "No pátio" até você marcar a saída.</div>
 
-    <div class="field-label">Tipo de entrada</div>
+    <div class="field-label">Tipo</div>
     <div class="seg" id="segTipo">
       <button class="on morador"  data-val="morador">🏠 Morador</button>
       <button class="visitante"   data-val="visitante">🚪 Visitante</button>
@@ -192,7 +179,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
       <button class="naoident"    data-val="naoident">⚠️ Não ident.</button>
     </div>
 
-    <!-- Formulário padrão (morador/visitante/prestador) -->
+    <!-- Formulário padrão: morador / visitante / prestador -->
     <div id="formPadrao">
       <div class="field-label">Torre</div>
       <div class="torre-grid" id="torreGrid"></div>
@@ -219,13 +206,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
           <button class="on" id="docBtnInformar">📋 Informar RG / CPF</button>
           <button id="docBtnNao" class="nao-info">🚫 Não informado</button>
         </div>
-        <input type="text" id="docInput" placeholder="RG ou CPF" inputmode="numeric" autocomplete="off">
-      </div>
-
-      <!-- Observação (todos os tipos) -->
-      <div class="obs-block">
-        <div class="field-label">Observação <span style="font-weight:400;text-transform:none;letter-spacing:0">(opcional)</span></div>
-        <textarea id="obsInput" placeholder="Ex: morador não quis se identificar, reconhecido pela facial…"></textarea>
+        <input type="text" id="docInput" placeholder="RG ou CPF do visitante" inputmode="numeric" autocomplete="off">
       </div>
 
       <button class="submit-btn" id="submitBtn" disabled>Registrar entrada</button>
@@ -234,13 +215,13 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
     <!-- Formulário: Não identificado -->
     <div id="formNaoIdent" style="display:none;">
       <div class="ni-banner">
-        <p>⚠️ Veículo passou sem parar ou recusou identificação.</p>
-        <small>Registre o máximo de informações que conseguir.</small>
+        ⚠️ <b>Veículo passou sem parar ou recusou identificação.</b><br>
+        Registre o máximo de informações que conseguir.
       </div>
 
-      <div class="field-label">Placa <span style="font-weight:400;text-transform:none;letter-spacing:0">(se conseguiu identificar)</span></div>
-      <input type="text" id="niPlacaInput" placeholder="Não identificado" maxlength="8" autocomplete="off" autocapitalize="characters">
-      <div class="placa-hint" id="niPlacaHint">Deixe em branco se não conseguiu ver a placa</div>
+      <div class="field-label">Placa <span class="opt">(se conseguiu identificar)</span></div>
+      <input type="text" id="niPlacaInput" placeholder="Opcional — deixe em branco se não viu" maxlength="8" autocomplete="off" autocapitalize="characters">
+      <div class="placa-hint" id="niPlacaHint">Aceita formato antigo e Mercosul</div>
 
       <div class="field-label" style="margin-top:16px;">Motivo do registro</div>
       <div class="chips" id="niMotivos">
@@ -251,12 +232,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
         <button class="chip" data-m="Veículo suspeito">Veículo suspeito</button>
       </div>
 
-      <div class="obs-block">
-        <div class="field-label" style="margin-top:16px;">Descrição do ocorrido</div>
-        <textarea id="niObsInput" placeholder="Descreva o que aconteceu: cor/modelo do veículo, horário, direção que seguiu…"></textarea>
-      </div>
+      <div class="field-label" style="margin-top:16px;">Descrição <span class="opt">(opcional)</span></div>
+      <textarea id="niObsInput" placeholder="Cor/modelo do veículo, direção que seguiu, outros detalhes…"></textarea>
 
-      <button class="submit-btn warn-btn" id="niSubmitBtn">⚠️ Registrar entrada não identificada</button>
+      <button class="submit-btn warn-btn" id="niSubmitBtn" disabled>⚠️ Registrar entrada não identificada</button>
     </div>
   </section>
 
@@ -280,49 +259,10 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
     </div>
   </section>
 
-  <!-- ABA: OCORRÊNCIAS -->
-  <section id="tab-ocorrencias" style="display:none;">
-    <div class="hint-banner danger">Registre aqui qualquer situação irregular para encaminhar à ADM ou supervisão.</div>
-
-    <!-- Formulário de ocorrência -->
-    <div id="formOcorrencia">
-      <div class="field-label">Tipo da ocorrência</div>
-      <div class="chips" id="ocMotivos">
-        <button class="chip" data-m="Entrada sem identificação">Entrada sem identificação</button>
-        <button class="chip" data-m="Recusa de identificação">Recusa de identificação</button>
-        <button class="chip" data-m="Aproveitou cancela aberta">Aproveitou cancela aberta</button>
-        <button class="chip" data-m="Veículo suspeito">Veículo suspeito</button>
-        <button class="chip" data-m="Comportamento inadequado">Comportamento inadequado</button>
-        <button class="chip" data-m="Outro">Outro</button>
-      </div>
-
-      <div class="field-label" style="margin-top:16px;">Placa envolvida <span style="font-weight:400;text-transform:none;letter-spacing:0">(se souber)</span></div>
-      <input type="text" id="ocPlacaInput" placeholder="Opcional" maxlength="8" autocomplete="off" autocapitalize="characters">
-
-      <div class="field-label" style="margin-top:16px;">Descrição detalhada</div>
-      <textarea id="ocDescInput" placeholder="Descreva o ocorrido com o máximo de detalhes possível…"></textarea>
-
-      <div class="field-label" style="margin-top:16px;">Seu nome (controlador)</div>
-      <input type="text" id="ocNomeControlador" placeholder="Nome completo" autocomplete="off">
-
-      <button class="submit-btn danger-btn" id="ocSubmitBtn" disabled>🚨 Registrar ocorrência</button>
-    </div>
-
-    <!-- Lista de ocorrências -->
-    <div style="margin-top:28px;">
-      <div class="field-label">Ocorrências registradas</div>
-      <div id="listOcorrencias"></div>
-      <div class="footer-actions">
-        <button class="btn-sec" id="exportOcPdfBtn">📄 Exportar PDF</button>
-        <button class="btn-sec danger" id="clearOcBtn">🗑 Limpar</button>
-      </div>
-    </div>
-  </section>
-
 </main>
 
 <div class="install-bar hidden" id="installBar">
-  <span>Instale este app na tela inicial para usar sem internet.</span>
+  <span>Instale este app na tela inicial para usar como um app normal, mesmo sem internet.</span>
   <button id="installBtn">Instalar</button>
   <button class="close" id="installClose">✕</button>
 </div>
