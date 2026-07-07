@@ -430,72 +430,112 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
   if (!list.length) { showToast('Nenhum registro para exportar.'); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc  = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pw   = doc.internal.pageSize.getWidth();
-  const mx   = 40;
+  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+  const pw  = doc.internal.pageSize.getWidth();
+  const mx  = 40;
   let y = 50;
 
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  // ── Cabeçalho do relatório ──
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20);
   doc.text('Relatório de Controle de Veículos', mx, y); y += 18;
   doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100);
   doc.text('Condomínio Viva Mais Barueri · Portaria', mx, y); y += 14;
   doc.text(`Gerado em ${formatDataHora(Date.now())}`, mx, y); y += 24;
-  doc.setDrawColor(220); doc.line(mx, y, pw - mx, y); y += 18;
+  doc.setDrawColor(200); doc.line(mx, y, pw - mx, y); y += 18;
 
-  // Colunas: Tipo(52) Torre(28) Apto(30) Nome(130) Doc(96) Placa(54) Entrada(62) Saída(até 555)
+  // ── Layout de colunas ──
+  // A4 útil: 595 - 40*2 = 515pt
+  // Tipo(50) Torre(28) Apto(28) Denom(140) Doc(90) Placa(54) Entrada(62) Saída(63) = 515
   const col = {
-    tipo:    mx,
-    torre:   mx + 52,
-    apto:    mx + 82,
-    nome:    mx + 114,
-    doc:     mx + 246,
-    placa:   mx + 344,
-    entrada: mx + 398,
-    saida:   mx + 462,
+    tipo:    mx,          // 50pt de largura
+    torre:   mx + 50,     // 28pt
+    apto:    mx + 78,     // 28pt
+    denom:   mx + 106,    // 140pt  ← "Denominação"
+    doc:     mx + 246,    // 90pt
+    placa:   mx + 336,    // 54pt
+    entrada: mx + 390,    // 62pt
+    saida:   mx + 452,    // até 555 (63pt)
+  };
+  // Larguras máximas para splitTextToSize em cada coluna
+  const maxW = {
+    tipo:   48, torre: 26, apto: 26,
+    denom: 138, doc:   88, placa: 52,
+    entrada: 60, saida: 62,
   };
 
+  const LINE_H  = 11;  // altura de cada linha de texto (pt)
+  const ROW_PAD = 5;   // espaço extra entre linhas de registro
+
   function drawHeader() {
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(40);
-    doc.text('Tipo',    col.tipo,    y);
-    doc.text('Torre',  col.torre,   y);
-    doc.text('Apto',   col.apto,    y);
-    doc.text('Nome',   col.nome,    y);
-    doc.text('Doc.',   col.doc,     y);
-    doc.text('Placa',  col.placa,   y);
-    doc.text('Entrada',col.entrada, y);
-    doc.text('Saída',  col.saida,   y);
-    y += 8; doc.setDrawColor(220); doc.line(mx, y, pw - mx, y); y += 12;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(40);
+    doc.text('Tipo',         col.tipo,    y);
+    doc.text('Torre',        col.torre,   y);
+    doc.text('Apto',         col.apto,    y);
+    doc.text('Denominação',  col.denom,   y);
+    doc.text('Doc.',         col.doc,     y);
+    doc.text('Placa',        col.placa,   y);
+    doc.text('Entrada',      col.entrada, y);
+    doc.text('Saída',        col.saida,   y);
+    y += 8;
+    doc.setDrawColor(200); doc.line(mx, y, pw - mx, y); y += 12;
   }
   drawHeader();
 
   const tipoLabel = { morador:'Morador', visitante:'Visitante', prestador:'Prestador', naoident:'Não ident.' };
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor(20);
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(20);
 
   list.slice().reverse().forEach(r => {
-    if (y > 760) { doc.addPage(); y = 50; drawHeader(); }
+    const isNI = r.tipo === 'naoident';
 
-    const isNI   = r.tipo === 'naoident';
-    // Para NI: nome da coluna é o motivo (truncado), placa pode ser "S/ PLACA"
-    const nomeTxt = isNI
-      ? (r.motivo ? r.motivo.slice(0, 17) + (r.motivo.length > 17 ? '…' : '') : '—')
-      : (r.nome   ? r.nome.slice(0, 17)   + (r.nome.length   > 17 ? '…' : '') : '—');
-    const placaTxt = r.placa ? r.placa : (isNI ? 'S/ PLACA' : '—');
-    const docTxt   = r.documento
-      ? (r.documento.length > 13 ? r.documento.slice(0, 12) + '…' : r.documento)
-      : '—';
+    // Textos de cada célula — sem truncamento, com quebra controlada
+    const denomStr  = isNI
+      ? (r.motivo || '—')
+      : (r.nome   || '—');
+    const placaStr  = r.placa || (isNI ? 'S/ PLACA' : '—');
+    const docStr    = r.documento || '—';
+    const entradaStr= fmtCurto(r.entrada);
+    const saidaStr  = r.saida ? fmtCurto(r.saida) : '— pátio';
+    const obsStr    = r.obs || null;  // linha extra de descrição, quando existir
 
-    doc.text(tipoLabel[r.tipo] || r.tipo,      col.tipo,    y);
-    doc.text(r.torre ? String(r.torre) : '—',  col.torre,   y);
-    doc.text(r.apto  ? String(r.apto)  : '—',  col.apto,    y);
-    doc.text(nomeTxt,                           col.nome,    y);
-    doc.text(docTxt,                            col.doc,     y);
-    doc.text(placaTxt,                          col.placa,   y);
-    doc.text(fmtCurto(r.entrada),               col.entrada, y);
-    doc.text(r.saida ? fmtCurto(r.saida) : '— pátio', col.saida, y);
-    y += 16;
+    // Quebrar textos que podem ser longos
+    const denomLines  = doc.splitTextToSize(denomStr,  maxW.denom);
+    const docLines    = doc.splitTextToSize(docStr,     maxW.doc);
+    const placaLines  = doc.splitTextToSize(placaStr,   maxW.placa);
+    const entradaLines= doc.splitTextToSize(entradaStr, maxW.entrada);
+    const saidaLines  = doc.splitTextToSize(saidaStr,   maxW.saida);
+    const obsLines    = obsStr ? doc.splitTextToSize(`* ${obsStr}`, pw - mx * 2) : [];
+
+    // Altura da linha: o campo mais alto determina
+    const mainLines = Math.max(
+      denomLines.length, docLines.length,
+      placaLines.length, entradaLines.length, saidaLines.length, 1
+    );
+    const rowH = mainLines * LINE_H + (obsLines.length > 0 ? obsLines.length * 10 + 4 : 0) + ROW_PAD;
+
+    // Virar de página se necessário
+    if (y + rowH > 760) { doc.addPage(); y = 50; drawHeader(); }
+
+    // Renderizar cada célula alinhada ao topo da linha
+    doc.text(tipoLabel[r.tipo] || r.tipo,         col.tipo,    y);
+    doc.text(r.torre ? String(r.torre) : '—',     col.torre,   y);
+    doc.text(r.apto  ? String(r.apto)  : '—',     col.apto,    y);
+    doc.text(denomLines,                           col.denom,   y);
+    doc.text(docLines,                             col.doc,     y);
+    doc.text(placaLines,                           col.placa,   y);
+    doc.text(entradaLines,                         col.entrada, y);
+    doc.text(saidaLines,                           col.saida,   y);
+
+    // Linha de descrição (obs), quando houver, em itálico logo abaixo
+    if (obsLines.length > 0) {
+      const obsY = y + mainLines * LINE_H + 2;
+      doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(100);
+      doc.text(obsLines, col.denom, obsY);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(20);
+    }
+
+    y += rowH;
   });
 
-  // Dispara download — o navegador mostra a barra de download nativa
   doc.save(`controle-veiculos-${formatData(Date.now()).replace(/\//g,'-')}.pdf`);
   showToast('✓ PDF gerado — verifique os downloads');
 });

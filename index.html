@@ -67,7 +67,7 @@ input[type=text],input[type=number],textarea{width:100%;background:var(--panel);
 textarea{resize:none;min-height:85px;font-size:14px;line-height:1.5;}
 input::placeholder,textarea::placeholder{color:#566;opacity:.6;}
 input:focus,textarea:focus{outline:none;border-color:var(--accent);}
-#placaInput,#niPlacaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
+#placaInput, #niPlacaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
 .placa-hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);}
 .suggest-box{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
 .suggest-item{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;}
@@ -219,8 +219,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
         Registre o máximo de informações que conseguir.
       </div>
 
-      <div class="field-label">Placa <span class="opt">(se conseguiu identificar)</span></div>
-      <input type="text" id="niPlacaInput" placeholder="Opcional — deixe em branco se não viu" maxlength="8" autocomplete="off" autocapitalize="characters">
+      <div class="field-label">Placa <span class="opt">(opcional — se conseguiu identificar)</span></div>
+      <input type="text" id="niPlacaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
       <div class="placa-hint" id="niPlacaHint">Aceita formato antigo e Mercosul</div>
 
       <div class="field-label" style="margin-top:16px;">Motivo do registro</div>
