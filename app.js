@@ -431,110 +431,182 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pw  = doc.internal.pageSize.getWidth();
-  const mx  = 40;
-  let y = 50;
+  const pw  = doc.internal.pageSize.getWidth();  // 595pt
+  const ph  = doc.internal.pageSize.getHeight(); // 842pt
+  const mx  = 30;  // margem lateral
+  const TW  = pw - mx * 2; // largura total da tabela: 535pt
+  let y = 45;
 
-  // ── Cabeçalho do relatório ──
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(16); doc.setTextColor(20);
-  doc.text('Relatório de Controle de Veículos', mx, y); y += 18;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(100);
-  doc.text('Condomínio Viva Mais Barueri · Portaria', mx, y); y += 14;
-  doc.text(`Gerado em ${formatDataHora(Date.now())}`, mx, y); y += 24;
-  doc.setDrawColor(200); doc.line(mx, y, pw - mx, y); y += 18;
+  // ── Cabeçalho do relatório ──────────────────────────────────
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20);
+  doc.text('Relatório de Controle de Veículos', mx, y); y += 17;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100);
+  doc.text('Condomínio Viva Mais Barueri · Portaria', mx, y); y += 13;
+  doc.text(`Gerado em ${formatDataHora(Date.now())}`, mx, y); y += 20;
+  doc.setDrawColor(180); doc.line(mx, y, pw - mx, y); y += 14;
 
-  // ── Layout de colunas ──
-  // A4 útil: 595 - 40*2 = 515pt
-  // Tipo(50) Torre(28) Apto(28) Denom(140) Doc(90) Placa(54) Entrada(62) Saída(63) = 515
-  const col = {
-    tipo:    mx,          // 50pt de largura
-    torre:   mx + 50,     // 28pt
-    apto:    mx + 78,     // 28pt
-    denom:   mx + 106,    // 140pt  ← "Denominação"
-    doc:     mx + 246,    // 90pt
-    placa:   mx + 336,    // 54pt
-    entrada: mx + 390,    // 62pt
-    saida:   mx + 452,    // até 555 (63pt)
-  };
-  // Larguras máximas para splitTextToSize em cada coluna
-  const maxW = {
-    tipo:   48, torre: 26, apto: 26,
-    denom: 138, doc:   88, placa: 52,
-    entrada: 60, saida: 62,
-  };
+  // ── Definição de colunas ────────────────────────────────────
+  // Total: 535pt
+  // Tipo(46) Torre(22) Apto(24) Denom(120) Doc/Obs(130) Placa(50) Entrada(72) Saída(71) = 535
+  const cols = [
+    { key:'tipo',    label:'Tipo',        w: 46 },
+    { key:'torre',   label:'Torre',       w: 22 },
+    { key:'apto',    label:'Apto',        w: 24 },
+    { key:'denom',   label:'Denominação', w:120 },
+    { key:'docobs',  label:'Doc./Obs.',   w:130 },
+    { key:'placa',   label:'Placa',       w: 50 },
+    { key:'entrada', label:'Entrada',     w: 72 },
+    { key:'saida',   label:'Saída',       w: 71 },
+  ];
 
-  const LINE_H  = 11;  // altura de cada linha de texto (pt)
-  const ROW_PAD = 5;   // espaço extra entre linhas de registro
+  // Calcular posição X de cada coluna
+  let xCursor = mx;
+  cols.forEach(c => { c.x = xCursor; xCursor += c.w; });
 
-  function drawHeader() {
-    doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(40);
-    doc.text('Tipo',         col.tipo,    y);
-    doc.text('Torre',        col.torre,   y);
-    doc.text('Apto',         col.apto,    y);
-    doc.text('Denominação',  col.denom,   y);
-    doc.text('Doc.',         col.doc,     y);
-    doc.text('Placa',        col.placa,   y);
-    doc.text('Entrada',      col.entrada, y);
-    doc.text('Saída',        col.saida,   y);
-    y += 8;
-    doc.setDrawColor(200); doc.line(mx, y, pw - mx, y); y += 12;
+  // Padding interno das células
+  const PAD_X = 4;
+  const PAD_Y = 5;
+  const LINE_H = 10; // altura de uma linha de texto (pt)
+  const FONT_SIZE = 7.8;
+  const HDR_H = 18;  // altura do cabeçalho
+
+  // Cor do cabeçalho: azul-ardósia escuro
+  const HDR_BG  = [30, 50, 80];   // RGB
+  const HDR_TXT = [255,255,255];
+  // Alternância de linhas
+  const ROW_BG_ODD  = [255,255,255];
+  const ROW_BG_EVEN = [242,245,250];
+  // Linha NI: fundo levemente alaranjado
+  const ROW_BG_NI   = [255,245,235];
+  // Cor da borda da grade
+  const GRID_COLOR  = [180,190,205];
+
+  // ── Cabeçalho da tabela ─────────────────────────────────────
+  function drawTableHeader() {
+    // Fundo do cabeçalho
+    doc.setFillColor(...HDR_BG);
+    doc.rect(mx, y, TW, HDR_H, 'F');
+
+    // Texto do cabeçalho
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(FONT_SIZE);
+    doc.setTextColor(...HDR_TXT);
+    cols.forEach(c => {
+      doc.text(c.label, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
+    });
+
+    // Bordas verticais do cabeçalho
+    doc.setDrawColor(...GRID_COLOR);
+    doc.setLineWidth(0.4);
+    cols.forEach(c => doc.line(c.x, y, c.x, y + HDR_H));
+    doc.line(pw - mx, y, pw - mx, y + HDR_H); // borda direita
+    // Bordas horizontais
+    doc.line(mx, y,         pw - mx, y);
+    doc.line(mx, y + HDR_H, pw - mx, y + HDR_H);
+
+    y += HDR_H;
   }
-  drawHeader();
+  drawTableHeader();
 
+  // ── Linhas de dados ─────────────────────────────────────────
   const tipoLabel = { morador:'Morador', visitante:'Visitante', prestador:'Prestador', naoident:'Não ident.' };
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(20);
+  let rowIndex = 0;
 
   list.slice().reverse().forEach(r => {
     const isNI = r.tipo === 'naoident';
 
-    // Textos de cada célula — sem truncamento, com quebra controlada
-    const denomStr  = isNI
-      ? (r.motivo || '—')
-      : (r.nome   || '—');
-    const placaStr  = r.placa || (isNI ? 'S/ PLACA' : '—');
-    const docStr    = r.documento || '—';
-    const entradaStr= fmtCurto(r.entrada);
-    const saidaStr  = r.saida ? fmtCurto(r.saida) : '— pátio';
-    const obsStr    = r.obs || null;  // linha extra de descrição, quando existir
+    // Montar texto de cada célula
+    const denomStr   = isNI ? (r.motivo || '') : (r.nome || '');
+    const placaStr   = r.placa || (isNI ? 'S/ PLACA' : '');
+    const entradaStr = fmtCurto(r.entrada);
+    const saidaStr   = r.saida ? fmtCurto(r.saida) : 'No pátio';
 
-    // Quebrar textos que podem ser longos
-    const denomLines  = doc.splitTextToSize(denomStr,  maxW.denom);
-    const docLines    = doc.splitTextToSize(docStr,     maxW.doc);
-    const placaLines  = doc.splitTextToSize(placaStr,   maxW.placa);
-    const entradaLines= doc.splitTextToSize(entradaStr, maxW.entrada);
-    const saidaLines  = doc.splitTextToSize(saidaStr,   maxW.saida);
-    const obsLines    = obsStr ? doc.splitTextToSize(`* ${obsStr}`, pw - mx * 2) : [];
+    // Doc./Obs.: documento na primeira linha, obs abaixo (se houver)
+    let docObsStr = r.documento || '';
+    if (r.obs) docObsStr += (docObsStr ? '\n' : '') + r.obs;
 
-    // Altura da linha: o campo mais alto determina
-    const mainLines = Math.max(
-      denomLines.length, docLines.length,
-      placaLines.length, entradaLines.length, saidaLines.length, 1
-    );
-    const rowH = mainLines * LINE_H + (obsLines.length > 0 ? obsLines.length * 10 + 4 : 0) + ROW_PAD;
+    // Largura interna de cada coluna (descontando padding)
+    const wInner = {};
+    cols.forEach(c => wInner[c.key] = c.w - PAD_X * 2);
 
-    // Virar de página se necessário
-    if (y + rowH > 760) { doc.addPage(); y = 50; drawHeader(); }
+    // Quebrar textos em linhas
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(FONT_SIZE);
+    const lines = {
+      tipo:    doc.splitTextToSize(tipoLabel[r.tipo] || r.tipo, wInner.tipo),
+      torre:   doc.splitTextToSize(r.torre ? String(r.torre) : '', wInner.torre),
+      apto:    doc.splitTextToSize(r.apto  ? String(r.apto)  : '', wInner.apto),
+      denom:   doc.splitTextToSize(denomStr,   wInner.denom),
+      docobs:  docObsStr
+                 ? docObsStr.split('\n').flatMap(seg => doc.splitTextToSize(seg, wInner.docobs - 8))
+                 : [''],
+      placa:   doc.splitTextToSize(placaStr,   wInner.placa),
+      entrada: doc.splitTextToSize(entradaStr, wInner.entrada),
+      saida:   doc.splitTextToSize(saidaStr,   wInner.saida),
+    };
 
-    // Renderizar cada célula alinhada ao topo da linha
-    doc.text(tipoLabel[r.tipo] || r.tipo,         col.tipo,    y);
-    doc.text(r.torre ? String(r.torre) : '—',     col.torre,   y);
-    doc.text(r.apto  ? String(r.apto)  : '—',     col.apto,    y);
-    doc.text(denomLines,                           col.denom,   y);
-    doc.text(docLines,                             col.doc,     y);
-    doc.text(placaLines,                           col.placa,   y);
-    doc.text(entradaLines,                         col.entrada, y);
-    doc.text(saidaLines,                           col.saida,   y);
+    // Altura da linha: célula mais alta + padding vertical
+    const maxL  = Math.max(...Object.values(lines).map(l => l.length), 1);
+    const rowH  = maxL * LINE_H + PAD_Y * 2;
 
-    // Linha de descrição (obs), quando houver, em itálico logo abaixo
-    if (obsLines.length > 0) {
-      const obsY = y + mainLines * LINE_H + 2;
-      doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); doc.setTextColor(100);
-      doc.text(obsLines, col.denom, obsY);
-      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(20);
-    }
+    // Nova página se necessário
+    if (y + rowH > ph - 40) { doc.addPage(); y = 30; drawTableHeader(); rowIndex = 0; }
+
+    // Fundo da linha
+    const bg = isNI ? ROW_BG_NI : (rowIndex % 2 === 0 ? ROW_BG_ODD : ROW_BG_EVEN);
+    doc.setFillColor(...bg);
+    doc.rect(mx, y, TW, rowH, 'F');
+
+    // Texto de cada célula — bold apenas para NI (destaque)
+    doc.setTextColor(20);
+    cols.forEach(c => {
+      const cellLines = lines[c.key];
+      if (!cellLines || cellLines.every(l => !l)) return;
+      if (isNI) {
+        doc.setFont('helvetica', 'bold');
+      } else {
+        doc.setFont('helvetica', 'normal');
+      }
+      doc.setFontSize(FONT_SIZE);
+      // Texto da célula Doc./Obs.: doc em normal, obs em itálico
+      if (c.key === 'docobs' && r.obs && r.documento) {
+        const docPart = doc.splitTextToSize(r.documento, wInner.docobs);
+        const obsPart = docObsStr.split('\n').slice(1).flatMap(seg => doc.splitTextToSize(seg, wInner.docobs));
+        doc.setFont('helvetica', isNI ? 'bolditalic' : 'normal');
+        doc.text(docPart, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
+        doc.setFont('helvetica', isNI ? 'bolditalic' : 'italic');
+        doc.setTextColor(80);
+        if (obsPart.length) doc.text(obsPart, c.x + PAD_X, y + PAD_Y + LINE_H - 2 + docPart.length * LINE_H);
+        doc.setTextColor(20);
+      } else {
+        // Obs sozinha (sem doc) → itálico
+        if (c.key === 'docobs' && r.obs && !r.documento) {
+          doc.setFont('helvetica', isNI ? 'bolditalic' : 'italic');
+          doc.setTextColor(80);
+        }
+        doc.text(cellLines, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
+        doc.setTextColor(20);
+      }
+    });
+
+    // Grade: bordas verticais da linha
+    doc.setDrawColor(...GRID_COLOR);
+    doc.setLineWidth(0.3);
+    cols.forEach(c => {
+      doc.line(c.x, y, c.x, y + rowH);
+    });
+    doc.line(pw - mx, y, pw - mx, y + rowH); // borda direita
+    // Borda inferior da linha
+    doc.setLineWidth(0.3);
+    doc.line(mx, y + rowH, pw - mx, y + rowH);
 
     y += rowH;
+    rowIndex++;
   });
+
+  // Borda externa da tabela (topo já desenhado no header)
+  doc.setDrawColor(...GRID_COLOR);
+  doc.setLineWidth(0.5);
+  doc.rect(mx, y - (y - 45), TW, y - 45); // cobre toda a tabela — omitir, grade já fecha
 
   doc.save(`controle-veiculos-${formatData(Date.now()).replace(/\//g,'-')}.pdf`);
   showToast('✓ PDF gerado — verifique os downloads');
