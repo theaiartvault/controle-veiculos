@@ -16,15 +16,15 @@
   --warn:#ffb84d;--warn-dim:#2e2010;
   --danger:#ff4d6a;--danger-dim:#2e1018;
   --purple:#b88fff;--purple-dim:#1e1a2e;
+  --teal:#3dd9c4;--teal-dim:#0f2b28;
   --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;-webkit-user-select:none;user-select:none;}
 body{padding-bottom:env(safe-area-inset-bottom);}
-input,textarea{user-select:text;-webkit-user-select:text;}
+input,textarea,select{user-select:text;-webkit-user-select:text;}
 button{cursor:pointer;}
 
-/* Topbar */
 .topbar{position:sticky;top:0;z-index:20;background:linear-gradient(180deg,#11141a,#0b0d10);border-bottom:1px solid var(--line);padding:14px 16px 10px;padding-top:calc(14px + env(safe-area-inset-top));display:flex;align-items:center;justify-content:space-between;}
 .brand{display:flex;align-items:center;gap:10px;}
 .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);}
@@ -34,7 +34,6 @@ button{cursor:pointer;}
 .status-pill .led{width:6px;height:6px;border-radius:50%;background:var(--ok);}
 .status-pill.offline .led{background:var(--warn);}
 
-/* Tabs */
 .tabs{display:flex;gap:6px;padding:10px 16px;background:var(--bg);border-bottom:1px solid var(--line);overflow-x:auto;}
 .tab{flex:1;text-align:center;padding:10px 6px;border-radius:10px;font-size:13px;font-weight:600;color:var(--muted);background:var(--panel);border:1px solid var(--line);white-space:nowrap;}
 .tab.active{color:var(--bg);background:var(--accent);border-color:var(--accent);}
@@ -42,46 +41,51 @@ button{cursor:pointer;}
 
 main{padding:16px;max-width:560px;margin:0 auto;}
 
-/* Labels */
 .field-label{font-size:12px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;}
 .field-label:first-child{margin-top:0;}
 .field-label .opt{font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;}
 
-/* Seg tipo */
-.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px;}
-.seg button{flex:1;padding:11px 2px;border:none;background:transparent;color:var(--muted);font-size:12px;font-weight:700;border-radius:9px;transition:.15s;}
+/* Seletor de tipo — 5 botões */
+.seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;gap:3px;flex-wrap:wrap;}
+.seg button{flex:1;min-width:0;padding:10px 2px;border:none;background:transparent;color:var(--muted);font-size:11px;font-weight:700;border-radius:9px;transition:.15s;line-height:1.3;}
 .seg button.on.morador  {background:var(--ok-dim);   color:var(--ok);}
 .seg button.on.visitante{background:var(--accent-dim);color:var(--accent);}
 .seg button.on.prestador{background:var(--purple-dim);color:var(--purple);}
+.seg button.on.gestao   {background:var(--teal-dim);  color:var(--teal);}
 .seg button.on.naoident {background:var(--danger-dim);color:var(--danger);}
 
-/* Torre */
 .torre-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .torre-btn{aspect-ratio:1;border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:12px;font-size:18px;font-weight:700;font-family:var(--mono);}
 .torre-btn.on{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
 
-/* Inputs */
 .input-row{display:flex;gap:10px;}
 .input-wrap{flex:1;}
-input[type=text],input[type=number],textarea{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;}
+input[type=text],input[type=number],textarea,select{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--text);border-radius:12px;padding:14px;font-size:16px;font-family:inherit;}
+select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238b93a3' d='M6 8L0 0h12z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;}
+select option{background:#13161c;}
 textarea{resize:none;min-height:85px;font-size:14px;line-height:1.5;}
 input::placeholder,textarea::placeholder{color:#566;opacity:.6;}
-input:focus,textarea:focus{outline:none;border-color:var(--accent);}
-#placaInput, #niPlacaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
+input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);}
+#placaInput,#niPlacaInput,#gestaoPlacaInput{font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;}
 .placa-hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:var(--mono);}
 .suggest-box{margin-top:6px;display:flex;flex-direction:column;gap:4px;}
 .suggest-item{background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:13px;color:var(--muted);display:flex;justify-content:space-between;}
 .suggest-item b{color:var(--text);font-weight:600;}
 
-/* Submit */
 .submit-btn{width:100%;margin-top:22px;padding:17px;border:none;border-radius:14px;background:var(--accent);color:#1a0d06;font-size:16px;font-weight:800;letter-spacing:.3px;box-shadow:0 6px 18px -6px rgba(255,106,61,.5);}
 .submit-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
 .submit-btn:active:not(:disabled){transform:scale(.98);}
 .submit-btn.warn-btn{background:var(--warn);box-shadow:0 6px 18px -6px rgba(255,184,77,.4);color:#1a0d06;}
 .submit-btn.warn-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
+.submit-btn.teal-btn{background:var(--teal);box-shadow:0 6px 18px -6px rgba(61,217,196,.4);color:#0a1f1d;}
+.submit-btn.teal-btn:disabled{background:var(--panel);color:#444;box-shadow:none;}
 
-/* Hint banner */
 .hint-banner{background:var(--panel-2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5;}
+
+/* Destino/Serviço (prestador) */
+.destino-chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.destino-chip{padding:8px 12px;border-radius:9px;border:1px solid var(--line);background:var(--panel);color:var(--muted);font-size:12px;font-weight:600;}
+.destino-chip.on{background:var(--purple-dim);color:var(--purple);border-color:#b88fff44;}
 
 /* Documento */
 .doc-block{margin-top:14px;}
@@ -93,6 +97,9 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .doc-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--purple-dim);color:var(--purple);font-family:var(--mono);}
 .doc-badge.nao-info{background:var(--panel-2);color:var(--muted);}
 
+/* Gestão */
+.gestao-banner{background:var(--teal-dim);border:1px solid var(--teal)44;border-radius:12px;padding:13px 14px;margin-bottom:14px;font-size:12px;color:var(--teal);line-height:1.5;}
+
 /* Não identificado */
 .ni-banner{background:var(--danger-dim);border:1px solid var(--danger)55;border-radius:12px;padding:13px 14px;margin-bottom:14px;font-size:12px;color:#ff8a9e;line-height:1.5;}
 .chips{display:flex;flex-wrap:wrap;gap:8px;}
@@ -103,10 +110,12 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start;}
 .card.saiu{opacity:.55;}
 .card.card-ni{border-color:var(--danger)55;}
+.card.card-gestao{border-color:var(--teal)55;}
 .card .tag{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
 .card .tag.morador  {background:var(--ok-dim);   color:var(--ok);}
 .card .tag.visitante{background:var(--accent-dim);color:var(--accent);}
 .card .tag.prestador{background:var(--purple-dim);color:var(--purple);}
+.card .tag.gestao   {background:var(--teal-dim);  color:var(--teal);}
 .card .tag.naoident {background:var(--danger-dim);color:var(--danger);}
 .card .body{flex:1;min-width:0;}
 .card .row1{display:flex;justify-content:space-between;align-items:baseline;gap:8px;}
@@ -118,29 +127,26 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 .card .status-line{font-size:11px;margin-top:6px;color:var(--muted);}
 .card .status-line.dentro{color:var(--ok);}
 .card .status-line.alerta{color:var(--danger);}
+.card .status-line.gestao-status{color:var(--teal);}
 .btn-saida{border:1px solid var(--line);background:var(--panel-2);color:var(--text);border-radius:9px;padding:9px 12px;font-size:12px;font-weight:700;white-space:nowrap;}
 .btn-saida:active{background:var(--accent);border-color:var(--accent);color:#1a0d06;}
 .day-divider{color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin:18px 0 8px;padding-left:2px;}
 
-/* Footer */
 .footer-actions{display:flex;gap:10px;margin-top:18px;}
 .btn-sec{flex:1;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:13px;font-weight:700;}
 .btn-sec.danger{color:var(--danger);}
 
-/* Lists */
 .search-bar{margin-bottom:12px;}
 .search-bar input{font-size:14px;padding:11px 14px;}
 .list-empty{text-align:center;color:var(--muted);padding:60px 20px;font-size:14px;line-height:1.6;}
 .list-empty .big{font-size:32px;display:block;margin-bottom:10px;opacity:.5;}
 
-/* Install bar */
 .install-bar{position:fixed;left:16px;right:16px;bottom:16px;z-index:30;background:var(--panel-2);border:1px solid var(--accent);border-radius:14px;padding:13px 14px;display:flex;align-items:center;gap:10px;box-shadow:0 10px 30px -10px #000;}
 .install-bar.hidden{display:none;}
 .install-bar span{flex:1;font-size:12.5px;color:var(--text);line-height:1.4;}
 .install-bar button{background:var(--accent);border:none;color:#1a0d06;font-weight:800;font-size:12.5px;padding:9px 14px;border-radius:9px;white-space:nowrap;}
 .install-bar .close{background:transparent;color:var(--muted);font-size:18px;padding:0 4px;}
 
-/* Toast */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1d2230;border:1px solid var(--accent);color:var(--text);padding:11px 18px;border-radius:30px;font-size:13px;font-weight:600;z-index:50;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;white-space:nowrap;}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(-6px);}
 ::-webkit-scrollbar{display:none;}
@@ -166,20 +172,19 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 </div>
 
 <main>
-
-  <!-- ABA: NOVO REGISTRO -->
   <section id="tab-novo">
     <div class="hint-banner">Use quando a TAG ou a leitura de placa falhar. Preencha e registre — o veículo entra na lista "No pátio" até você marcar a saída.</div>
 
     <div class="field-label">Tipo</div>
     <div class="seg" id="segTipo">
-      <button class="on morador"  data-val="morador">🏠 Morador</button>
-      <button class="visitante"   data-val="visitante">🚪 Visitante</button>
-      <button class="prestador"   data-val="prestador">🔧 Prestador</button>
-      <button class="naoident"    data-val="naoident">⚠️ Não ident.</button>
+      <button class="on morador"  data-val="morador">🏠<br>Morador</button>
+      <button class="visitante"   data-val="visitante">🚪<br>Visitante</button>
+      <button class="prestador"   data-val="prestador">🔧<br>Prestador</button>
+      <button class="gestao"      data-val="gestao">👔<br>Gestão</button>
+      <button class="naoident"    data-val="naoident">⚠️<br>Não ident.</button>
     </div>
 
-    <!-- Formulário padrão: morador / visitante / prestador -->
+    <!-- FORM PADRÃO: Morador / Visitante -->
     <div id="formPadrao">
       <div class="field-label">Torre</div>
       <div class="torre-grid" id="torreGrid"></div>
@@ -199,20 +204,96 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
       <input type="text" id="placaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
       <div class="placa-hint" id="placaHint">Aceita formato antigo e Mercosul</div>
 
-      <!-- Documento — só Visitante e Prestador -->
       <div class="doc-block" id="docBlock" style="display:none;">
         <div class="field-label">Documento</div>
         <div class="doc-toggle">
           <button class="on" id="docBtnInformar">📋 Informar RG / CPF</button>
           <button id="docBtnNao" class="nao-info">🚫 Não informado</button>
         </div>
-        <input type="text" id="docInput" placeholder="RG ou CPF do visitante" inputmode="numeric" autocomplete="off">
+        <input type="text" id="docInput" placeholder="RG ou CPF" inputmode="numeric" autocomplete="off">
       </div>
 
       <button class="submit-btn" id="submitBtn" disabled>Registrar entrada</button>
     </div>
 
-    <!-- Formulário: Não identificado -->
+    <!-- FORM PRESTADOR -->
+    <div id="formPrestador" style="display:none;">
+      <div class="field-label">Torre <span class="opt">(opcional)</span></div>
+      <div class="torre-grid" id="torreGridP"></div>
+
+      <div class="field-label">Detalhes</div>
+      <div class="input-row">
+        <div class="input-wrap" style="flex:0 0 110px;">
+          <input type="number" id="aptoInputP" placeholder="Apto" inputmode="numeric">
+        </div>
+        <div class="input-wrap">
+          <input type="text" id="nomeInputP" placeholder="Nome / empresa" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="field-label" style="margin-top:16px;">Destino / Serviço <span class="opt">(toque ou digite)</span></div>
+      <div class="destino-chips" id="destinoChips">
+        <button class="destino-chip" data-d="Área comum">Área comum</button>
+        <button class="destino-chip" data-d="Piscina">Piscina</button>
+        <button class="destino-chip" data-d="Casa de Bombas">Casa de Bombas</button>
+        <button class="destino-chip" data-d="Barrilete">Barrilete</button>
+        <button class="destino-chip" data-d="Casa de Máquinas">Casa de Máquinas</button>
+        <button class="destino-chip" data-d="Centro de Medição">Centro de Medição</button>
+        <button class="destino-chip" data-d="Quadro de Energia">Quadro de Energia</button>
+        <button class="destino-chip" data-d="Atlas Elevadores">Atlas Elevadores</button>
+        <button class="destino-chip" data-d="Salão de Festas">Salão de Festas</button>
+        <button class="destino-chip" data-d="Guarita">Guarita</button>
+      </div>
+      <input type="text" id="destinoInput" placeholder="Ou descreva o destino/serviço…" autocomplete="off">
+
+      <div class="field-label">Placa</div>
+      <input type="text" id="placaInputP" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters" style="font-family:var(--mono);letter-spacing:2px;font-size:19px;font-weight:700;text-transform:uppercase;">
+      <div class="placa-hint" id="placaHintP">Aceita formato antigo e Mercosul</div>
+
+      <div class="doc-block">
+        <div class="field-label">Documento</div>
+        <div class="doc-toggle">
+          <button class="on" id="docBtnInformarP">📋 Informar RG / CPF</button>
+          <button id="docBtnNaoP" class="nao-info">🚫 Não informado</button>
+        </div>
+        <input type="text" id="docInputP" placeholder="RG ou CPF do prestador" inputmode="numeric" autocomplete="off" style="font-family:var(--mono);font-size:15px;letter-spacing:.5px;">
+      </div>
+
+      <button class="submit-btn" id="submitBtnP" style="background:var(--purple);box-shadow:0 6px 18px -6px rgba(184,143,255,.4);color:#0d0a1f;" disabled>Registrar entrada</button>
+    </div>
+
+    <!-- FORM GESTÃO -->
+    <div id="formGestao" style="display:none;">
+      <div class="gestao-banner">
+        👔 <b>Acesso de Gestão / Administração.</b><br>
+        Registre o cargo e identifique o visitante.
+      </div>
+
+      <div class="field-label">Cargo / Função</div>
+      <select id="gestaoCargoSelect">
+        <option value="">Selecione o cargo…</option>
+        <option value="CEO / Diretor">👔 CEO / Diretor</option>
+        <option value="Síndico">🏛️ Síndico</option>
+        <option value="Sub Síndica">🏛️ Sub Síndica</option>
+        <option value="Zelador">🔧 Zelador</option>
+        <option value="Encarregado">👷 Encarregado</option>
+        <option value="Outro">👤 Outro</option>
+      </select>
+
+      <div class="field-label" style="margin-top:16px;">Nome</div>
+      <input type="text" id="gestaoNomeInput" placeholder="Nome completo" autocomplete="off">
+
+      <div class="field-label">Torre <span class="opt">(opcional)</span></div>
+      <div class="torre-grid" id="torreGridG"></div>
+
+      <div class="field-label">Placa</div>
+      <input type="text" id="gestaoPlacaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
+      <div class="placa-hint" id="gestaoPlacaHint">Aceita formato antigo e Mercosul</div>
+
+      <button class="submit-btn teal-btn" id="submitBtnG" disabled>Registrar entrada</button>
+    </div>
+
+    <!-- FORM NÃO IDENTIFICADO -->
     <div id="formNaoIdent" style="display:none;">
       <div class="ni-banner">
         ⚠️ <b>Veículo passou sem parar ou recusou identificação.</b><br>
@@ -239,7 +320,6 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
     </div>
   </section>
 
-  <!-- ABA: NO PÁTIO -->
   <section id="tab-dentro" style="display:none;">
     <div class="search-bar">
       <input type="text" id="searchDentro" placeholder="Buscar por placa, torre, apto ou nome…">
@@ -247,7 +327,6 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
     <div id="listDentro"></div>
   </section>
 
-  <!-- ABA: HISTÓRICO -->
   <section id="tab-historico" style="display:none;">
     <div class="search-bar">
       <input type="text" id="searchHistorico" placeholder="Buscar por placa, torre, apto ou nome…">
@@ -258,7 +337,6 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
       <button class="btn-sec danger" id="clearBtn">🗑 Limpar tudo</button>
     </div>
   </section>
-
 </main>
 
 <div class="install-bar hidden" id="installBar">
@@ -266,9 +344,7 @@ input:focus,textarea:focus{outline:none;border-color:var(--accent);}
   <button id="installBtn">Instalar</button>
   <button class="close" id="installClose">✕</button>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="app.js"></script>
 </body>

@@ -3,9 +3,11 @@
 const STORAGE_KEY = 'cv_registros_v1';
 const NOMES_KEY   = 'cv_nomes_v1';
 
-let state   = { tipo: 'morador', torre: null };
-let docMode = 'informar';
+let state       = { tipo: 'morador', torre: null, torraP: null, torraG: null };
+let docMode     = 'informar';
+let docModeP    = 'informar';
 let niMotivoSel = null;
+let destinoSel  = null;
 
 // ── Persistência ──────────────────────────────────────────────
 function loadRegistros()  { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
@@ -33,6 +35,23 @@ function showToast(msg) {
   t._timer = setTimeout(() => t.classList.remove('show'), 2400);
 }
 
+function placaFieldSetup(inputId, hintId) {
+  const inp  = document.getElementById(inputId);
+  const hint = document.getElementById(hintId);
+  inp.addEventListener('input', () => {
+    inp.value = normalizePlaca(inp.value);
+    const v = inp.value;
+    if (v.length === 7) {
+      hint.textContent = isPlacaValida(v) ? '✓ placa válida' : 'formato não reconhecido — confira';
+      hint.style.color = isPlacaValida(v) ? 'var(--ok)' : 'var(--warn)';
+    } else {
+      hint.textContent = 'Aceita formato antigo e Mercosul';
+      hint.style.color = 'var(--muted)';
+    }
+    validateAll();
+  });
+}
+
 // ── Tabs ──────────────────────────────────────────────────────
 const tabEls   = document.querySelectorAll('.tab');
 const sections = {
@@ -51,79 +70,64 @@ tabEls.forEach(tab => {
   });
 });
 
-// ── Tipo de entrada ───────────────────────────────────────────
-const segTipo      = document.getElementById('segTipo');
-const formPadrao   = document.getElementById('formPadrao');
-const formNaoIdent = document.getElementById('formNaoIdent');
-const docBlock     = document.getElementById('docBlock');
-const docInput     = document.getElementById('docInput');
+// ── Formulários ───────────────────────────────────────────────
+const forms = {
+  morador:  document.getElementById('formPadrao'),
+  visitante:document.getElementById('formPadrao'),
+  prestador:document.getElementById('formPrestador'),
+  gestao:   document.getElementById('formGestao'),
+  naoident: document.getElementById('formNaoIdent'),
+};
+const allForms = ['formPadrao','formPrestador','formGestao','formNaoIdent'].map(id => document.getElementById(id));
 
-function tipoExigeDoc(t) { return t === 'visitante' || t === 'prestador'; }
-
-function updateDocBlock() {
-  docBlock.style.display = tipoExigeDoc(state.tipo) ? '' : 'none';
-  if (!tipoExigeDoc(state.tipo)) docInput.value = '';
-  validateForm();
+function showForm(tipo) {
+  allForms.forEach(f => f.style.display = 'none');
+  if (tipo === 'morador' || tipo === 'visitante') {
+    document.getElementById('formPadrao').style.display = '';
+    const ph = { morador:'Nome do morador', visitante:'Nome do visitante' };
+    document.getElementById('nomeInput').placeholder = ph[tipo] || 'Nome';
+    const docBlock = document.getElementById('docBlock');
+    docBlock.style.display = tipo === 'visitante' ? '' : 'none';
+    if (tipo !== 'visitante') document.getElementById('docInput').value = '';
+  } else if (tipo === 'prestador') {
+    document.getElementById('formPrestador').style.display = '';
+  } else if (tipo === 'gestao') {
+    document.getElementById('formGestao').style.display = '';
+  } else if (tipo === 'naoident') {
+    document.getElementById('formNaoIdent').style.display = '';
+  }
+  validateAll();
 }
 
+// ── Seletor de tipo ───────────────────────────────────────────
+const segTipo = document.getElementById('segTipo');
 segTipo.querySelectorAll('button').forEach(btn => {
   btn.addEventListener('click', () => {
     segTipo.querySelectorAll('button').forEach(b => b.classList.remove('on'));
     btn.classList.add('on');
     state.tipo = btn.dataset.val;
-
-    if (state.tipo === 'naoident') {
-      formPadrao.style.display   = 'none';
-      formNaoIdent.style.display = '';
-    } else {
-      formPadrao.style.display   = '';
-      formNaoIdent.style.display = 'none';
-      const ph = { morador:'Nome do morador', visitante:'Nome do visitante', prestador:'Nome do prestador / empresa' };
-      document.getElementById('nomeInput').placeholder = ph[state.tipo];
-      docMode = 'informar';
-      document.getElementById('docBtnInformar').classList.add('on');
-      document.getElementById('docBtnNao').classList.remove('on');
-      docInput.style.display = '';
-      docInput.value = '';
-      updateDocBlock();
-    }
+    showForm(state.tipo);
   });
 });
 
-// Documento toggle
-document.getElementById('docBtnInformar').addEventListener('click', () => {
-  docMode = 'informar';
-  document.getElementById('docBtnInformar').classList.add('on');
-  document.getElementById('docBtnNao').classList.remove('on');
-  docInput.style.display = '';
-  docInput.focus();
-  validateForm();
-});
-document.getElementById('docBtnNao').addEventListener('click', () => {
-  docMode = 'nao';
-  document.getElementById('docBtnNao').classList.add('on');
-  document.getElementById('docBtnInformar').classList.remove('on');
-  docInput.value = '';
-  docInput.style.display = 'none';
-  validateForm();
-});
-docInput.addEventListener('input', validateForm);
-
-// ── Torre ─────────────────────────────────────────────────────
-const torreGrid = document.getElementById('torreGrid');
-for (let i = 1; i <= 9; i++) {
-  const b = document.createElement('button');
-  b.className = 'torre-btn';
-  b.textContent = i;
-  b.dataset.val = i;
-  b.addEventListener('click', () => {
-    torreGrid.querySelectorAll('.torre-btn').forEach(x => x.classList.remove('on'));
-    state.torre = (state.torre === i) ? null : i;
-    if (state.torre) { b.classList.add('on'); checkSuggestNome(); }
-    validateForm();
-  });
-  torreGrid.appendChild(b);
+// ── Torre: form padrão ────────────────────────────────────────
+function buildTorreGrid(containerId, stateKey, onClickExtra) {
+  const grid = document.getElementById(containerId);
+  for (let i = 1; i <= 9; i++) {
+    const b = document.createElement('button');
+    b.className = 'torre-btn'; b.textContent = i; b.dataset.val = i;
+    b.addEventListener('click', () => {
+      grid.querySelectorAll('.torre-btn').forEach(x => x.classList.remove('on'));
+      state[stateKey] = (state[stateKey] === i) ? null : i;
+      if (state[stateKey]) { b.classList.add('on'); if(onClickExtra) onClickExtra(); }
+      validateAll();
+    });
+    grid.appendChild(b);
+  }
 }
+buildTorreGrid('torreGrid',  'torre',  checkSuggestNome);
+buildTorreGrid('torreGridP', 'torraP', null);
+buildTorreGrid('torreGridG', 'torraG', null);
 
 // ── Sugestão de nome ──────────────────────────────────────────
 const aptoInput  = document.getElementById('aptoInput');
@@ -138,11 +142,12 @@ function checkSuggestNome() {
     const div = document.createElement('div');
     div.className = 'suggest-item';
     div.innerHTML = `<span>Torre ${state.torre}, Apto ${aptoInput.value}</span><b>${nome}</b>`;
-    div.addEventListener('click', () => { nomeInput.value = nome; suggestBox.innerHTML = ''; validateForm(); });
+    div.addEventListener('click', () => { nomeInput.value = nome; suggestBox.innerHTML = ''; validateAll(); });
     suggestBox.appendChild(div);
   });
 }
-aptoInput.addEventListener('input', () => { checkSuggestNome(); validateForm(); });
+aptoInput.addEventListener('input', () => { checkSuggestNome(); validateAll(); });
+nomeInput.addEventListener('input', validateAll);
 
 function rememberNome(torre, apto, nome) {
   if (!torre || !apto || !nome) return;
@@ -154,273 +159,348 @@ function rememberNome(torre, apto, nome) {
   saveNomes(nomes);
 }
 
-// ── Placa (form padrão) ───────────────────────────────────────
-const placaInput = document.getElementById('placaInput');
-const placaHint  = document.getElementById('placaHint');
-placaInput.addEventListener('input', () => {
-  placaInput.value = normalizePlaca(placaInput.value);
-  const v = placaInput.value;
-  if (v.length === 7) {
-    placaHint.textContent = isPlacaValida(v) ? '✓ placa válida' : 'formato não reconhecido — confira';
-    placaHint.style.color = isPlacaValida(v) ? 'var(--ok)' : 'var(--warn)';
-  } else {
-    placaHint.textContent = 'Aceita formato antigo e Mercosul';
-    placaHint.style.color = 'var(--muted)';
-  }
-  validateForm();
-});
+// ── Placa inputs ──────────────────────────────────────────────
+placaFieldSetup('placaInput',      'placaHint');
+placaFieldSetup('placaInputP',     'placaHintP');
+placaFieldSetup('gestaoPlacaInput','gestaoPlacaHint');
 
-// ── Validação form padrão ─────────────────────────────────────
-const submitBtn = document.getElementById('submitBtn');
-function validateForm() {
-  if (state.tipo === 'naoident') return;
-  const base  = state.torre && aptoInput.value.trim() && nomeInput.value.trim() && placaInput.value.length >= 6;
-  const docOk = !tipoExigeDoc(state.tipo) || docMode === 'nao' || docInput.value.trim().length >= 3;
-  submitBtn.disabled = !(base && docOk);
-}
-nomeInput.addEventListener('input', validateForm);
-
-// ── Registrar entrada (form padrão) ───────────────────────────
-submitBtn.addEventListener('click', () => {
-  const torre = state.torre;
-  const apto  = aptoInput.value.trim();
-  const nome  = nomeInput.value.trim();
-  const placa = placaInput.value.trim();
-  let documento = null;
-  if (tipoExigeDoc(state.tipo))
-    documento = docMode === 'nao' ? 'Não informado' : docInput.value.trim();
-
-  const reg = { id: uid(), tipo: state.tipo, torre, apto, nome, placa, documento, obs: null, entrada: Date.now(), saida: null };
-  const list = loadRegistros();
-  list.unshift(reg);
-  saveRegistros(list);
-  rememberNome(torre, apto, nome);
-  showToast(`✓ ${placa} registrada — Torre ${torre}, Apto ${apto}`);
-
-  // reset
-  state.torre = null;
-  torreGrid.querySelectorAll('.torre-btn').forEach(x => x.classList.remove('on'));
-  aptoInput.value = '';
-  nomeInput.value = '';
-  placaInput.value = '';
-  placaHint.textContent = 'Aceita formato antigo e Mercosul';
-  placaHint.style.color = 'var(--muted)';
-  docInput.value = '';
-  suggestBox.innerHTML = '';
+// ── Documento: form padrão (visitante) ────────────────────────
+document.getElementById('docBtnInformar').addEventListener('click', () => {
   docMode = 'informar';
   document.getElementById('docBtnInformar').classList.add('on');
   document.getElementById('docBtnNao').classList.remove('on');
-  docInput.style.display = '';
-  validateForm();
-  updateCounts();
+  document.getElementById('docInput').style.display = '';
+  validateAll();
+});
+document.getElementById('docBtnNao').addEventListener('click', () => {
+  docMode = 'nao';
+  document.getElementById('docBtnNao').classList.add('on');
+  document.getElementById('docBtnInformar').classList.remove('on');
+  document.getElementById('docInput').value = '';
+  document.getElementById('docInput').style.display = 'none';
+  validateAll();
+});
+document.getElementById('docInput').addEventListener('input', validateAll);
+
+// ── Documento: form prestador ────────────────────────────────
+document.getElementById('docBtnInformarP').addEventListener('click', () => {
+  docModeP = 'informar';
+  document.getElementById('docBtnInformarP').classList.add('on');
+  document.getElementById('docBtnNaoP').classList.remove('on');
+  document.getElementById('docInputP').style.display = '';
+  validateAll();
+});
+document.getElementById('docBtnNaoP').addEventListener('click', () => {
+  docModeP = 'nao';
+  document.getElementById('docBtnNaoP').classList.add('on');
+  document.getElementById('docBtnInformarP').classList.remove('on');
+  document.getElementById('docInputP').value = '';
+  document.getElementById('docInputP').style.display = 'none';
+  validateAll();
+});
+document.getElementById('docInputP').addEventListener('input', validateAll);
+
+// ── Destino chips (prestador) ─────────────────────────────────
+const destinoInput = document.getElementById('destinoInput');
+document.getElementById('destinoChips').querySelectorAll('.destino-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('destinoChips').querySelectorAll('.destino-chip').forEach(c => c.classList.remove('on'));
+    if (destinoSel === chip.dataset.d) {
+      destinoSel = null;
+      destinoInput.value = '';
+    } else {
+      chip.classList.add('on');
+      destinoSel = chip.dataset.d;
+      destinoInput.value = chip.dataset.d;
+    }
+    validateAll();
+  });
+});
+destinoInput.addEventListener('input', () => {
+  // Se digitou manualmente, deseleciona chips
+  document.getElementById('destinoChips').querySelectorAll('.destino-chip').forEach(c => c.classList.remove('on'));
+  destinoSel = null;
+  validateAll();
 });
 
-// ── Não identificado: chips ───────────────────────────────────
+// ── Gestão ────────────────────────────────────────────────────
+document.getElementById('gestaoCargoSelect').addEventListener('change', validateAll);
+document.getElementById('gestaoNomeInput').addEventListener('input', validateAll);
+
+// ── NI chips ─────────────────────────────────────────────────
 document.getElementById('niMotivos').querySelectorAll('.chip').forEach(chip => {
   chip.addEventListener('click', () => {
     document.getElementById('niMotivos').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
     chip.classList.add('on');
     niMotivoSel = chip.dataset.m;
-    validateNI();
+    validateAll();
   });
 });
-
-// ── Placa NI ─────────────────────────────────────────────────
-const niPlacaInput = document.getElementById('niPlacaInput');
-const niPlacaHint  = document.getElementById('niPlacaHint');
-niPlacaInput.addEventListener('input', () => {
-  niPlacaInput.value = normalizePlaca(niPlacaInput.value);
-  const v = niPlacaInput.value;
-  if (v.length === 7) {
-    niPlacaHint.textContent = isPlacaValida(v) ? '✓ placa válida' : 'formato não reconhecido';
-    niPlacaHint.style.color = isPlacaValida(v) ? 'var(--ok)' : 'var(--warn)';
-  } else {
-    niPlacaHint.textContent = 'Aceita formato antigo e Mercosul';
-    niPlacaHint.style.color = 'var(--muted)';
-  }
+document.getElementById('niPlacaInput').addEventListener('input', () => {
+  const inp = document.getElementById('niPlacaInput');
+  const hint = document.getElementById('niPlacaHint');
+  inp.value = normalizePlaca(inp.value);
+  const v = inp.value;
+  if (v.length===7){hint.textContent=isPlacaValida(v)?'✓ placa válida':'formato não reconhecido';hint.style.color=isPlacaValida(v)?'var(--ok)':'var(--warn)';}
+  else{hint.textContent='Aceita formato antigo e Mercosul';hint.style.color='var(--muted)';}
 });
 
-const niSubmitBtn = document.getElementById('niSubmitBtn');
-function validateNI() { niSubmitBtn.disabled = !niMotivoSel; }
-
-niSubmitBtn.addEventListener('click', () => {
-  const placa = niPlacaInput.value.trim();
-  const obs   = document.getElementById('niObsInput').value.trim();
-  const reg = {
-    id: uid(), tipo: 'naoident',
-    placa:     placa || null,
-    motivo:    niMotivoSel,
-    obs:       obs || null,
-    torre: null, apto: null, nome: null, documento: null,
-    entrada: Date.now(), saida: null,
-  };
-  const list = loadRegistros();
-  list.unshift(reg);
-  saveRegistros(list);
-  showToast('⚠️ Entrada não identificada registrada');
-
-  // reset
-  niPlacaInput.value = '';
-  niPlacaHint.textContent = 'Aceita formato antigo e Mercosul';
-  niPlacaHint.style.color = 'var(--muted)';
-  document.getElementById('niObsInput').value = '';
-  document.getElementById('niMotivos').querySelectorAll('.chip').forEach(c => c.classList.remove('on'));
-  niMotivoSel = null;
-  validateNI();
-  updateCounts();
-});
-
-// ── Renderizar: No pátio ──────────────────────────────────────
-function renderDentro(filter = '') {
-  const list = loadRegistros().filter(r => !r.saida);
-  const f    = filter.trim().toUpperCase();
-  const fil  = f ? list.filter(r =>
-    (r.placa||'').includes(f) ||
-    String(r.torre||'').includes(f) ||
-    String(r.apto||'').includes(f) ||
-    (r.nome||'').toUpperCase().includes(f) ||
-    (r.motivo||'').toUpperCase().includes(f)
-  ) : list;
-  const c = document.getElementById('listDentro');
-  c.innerHTML = '';
-  if (!fil.length) {
-    c.innerHTML = `<div class="list-empty"><span class="big">🅿️</span>${f?'Nada encontrado.':'Nenhum veículo no pátio agora.'}</div>`;
-    return;
+// ── Validação central ─────────────────────────────────────────
+function validateAll() {
+  const t = state.tipo;
+  // Morador
+  if (t === 'morador') {
+    const ok = state.torre && aptoInput.value.trim() && nomeInput.value.trim() && document.getElementById('placaInput').value.length >= 6;
+    document.getElementById('submitBtn').disabled = !ok;
   }
-  fil.forEach(r => c.appendChild(buildCard(r, true)));
+  // Visitante
+  if (t === 'visitante') {
+    const base = state.torre && aptoInput.value.trim() && nomeInput.value.trim() && document.getElementById('placaInput').value.length >= 6;
+    const docOk = docMode === 'nao' || document.getElementById('docInput').value.trim().length >= 3;
+    document.getElementById('submitBtn').disabled = !(base && docOk);
+  }
+  // Prestador: torre e apto opcionais; precisa de nome e placa
+  if (t === 'prestador') {
+    const nome = document.getElementById('nomeInputP').value.trim();
+    const placa = document.getElementById('placaInputP').value.length >= 6;
+    const docOk = docModeP === 'nao' || document.getElementById('docInputP').value.trim().length >= 3;
+    document.getElementById('submitBtnP').disabled = !(nome && placa && docOk);
+  }
+  // Gestão: cargo e nome obrigatórios
+  if (t === 'gestao') {
+    const cargo = document.getElementById('gestaoCargoSelect').value;
+    const nome  = document.getElementById('gestaoNomeInput').value.trim();
+    document.getElementById('submitBtnG').disabled = !(cargo && nome);
+  }
+  // NI: só motivo obrigatório
+  if (t === 'naoident') {
+    document.getElementById('niSubmitBtn').disabled = !niMotivoSel;
+  }
 }
 
-// ── Renderizar: Histórico ─────────────────────────────────────
-function renderHistorico(filter = '') {
+// ── Registrar: Morador / Visitante ────────────────────────────
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const tipo  = state.tipo;
+  const torre = state.torre;
+  const apto  = aptoInput.value.trim();
+  const nome  = nomeInput.value.trim();
+  const placa = document.getElementById('placaInput').value.trim();
+  const doc   = tipo === 'visitante'
+    ? (docMode === 'nao' ? 'Não informado' : document.getElementById('docInput').value.trim())
+    : null;
+
+  gravar({ tipo, torre, apto, nome, placa, documento: doc, destino: null, cargo: null, obs: null, motivo: null });
+  showToast(`✓ ${placa} registrada — Torre ${torre}, Apto ${apto}`);
+
+  // reset
+  state.torre = null;
+  document.getElementById('torreGrid').querySelectorAll('.torre-btn').forEach(x=>x.classList.remove('on'));
+  aptoInput.value=''; nomeInput.value='';
+  document.getElementById('placaInput').value='';
+  document.getElementById('placaHint').textContent='Aceita formato antigo e Mercosul';
+  document.getElementById('placaHint').style.color='var(--muted)';
+  document.getElementById('docInput').value='';
+  suggestBox.innerHTML='';
+  docMode='informar';
+  document.getElementById('docBtnInformar').classList.add('on');
+  document.getElementById('docBtnNao').classList.remove('on');
+  document.getElementById('docInput').style.display='';
+  validateAll();
+});
+
+// ── Registrar: Prestador ─────────────────────────────────────
+document.getElementById('submitBtnP').addEventListener('click', () => {
+  const torre  = state.torraP;
+  const apto   = document.getElementById('aptoInputP').value.trim();
+  const nome   = document.getElementById('nomeInputP').value.trim();
+  const placa  = document.getElementById('placaInputP').value.trim();
+  const destino= destinoInput.value.trim() || null;
+  const doc    = docModeP === 'nao' ? 'Não informado' : document.getElementById('docInputP').value.trim();
+
+  gravar({ tipo:'prestador', torre, apto, nome, placa, documento: doc, destino, cargo: null, obs: null, motivo: null });
+  showToast(`✓ ${placa} registrada — ${nome}`);
+
+  state.torraP = null;
+  document.getElementById('torreGridP').querySelectorAll('.torre-btn').forEach(x=>x.classList.remove('on'));
+  document.getElementById('aptoInputP').value='';
+  document.getElementById('nomeInputP').value='';
+  document.getElementById('placaInputP').value='';
+  document.getElementById('placaHintP').textContent='Aceita formato antigo e Mercosul';
+  document.getElementById('placaHintP').style.color='var(--muted)';
+  document.getElementById('docInputP').value='';
+  document.getElementById('destinoChips').querySelectorAll('.destino-chip').forEach(c=>c.classList.remove('on'));
+  destinoInput.value=''; destinoSel=null;
+  docModeP='informar';
+  document.getElementById('docBtnInformarP').classList.add('on');
+  document.getElementById('docBtnNaoP').classList.remove('on');
+  document.getElementById('docInputP').style.display='';
+  validateAll();
+});
+
+// ── Registrar: Gestão ────────────────────────────────────────
+document.getElementById('submitBtnG').addEventListener('click', () => {
+  const cargo = document.getElementById('gestaoCargoSelect').value;
+  const nome  = document.getElementById('gestaoNomeInput').value.trim();
+  const torre = state.torraG;
+  const placa = document.getElementById('gestaoPlacaInput').value.trim();
+
+  gravar({ tipo:'gestao', torre, apto: null, nome, placa: placa||null, documento: null, destino: null, cargo, obs: null, motivo: null });
+  showToast(`✓ ${cargo} — ${nome} registrado`);
+
+  state.torraG = null;
+  document.getElementById('torreGridG').querySelectorAll('.torre-btn').forEach(x=>x.classList.remove('on'));
+  document.getElementById('gestaoCargoSelect').value='';
+  document.getElementById('gestaoNomeInput').value='';
+  document.getElementById('gestaoPlacaInput').value='';
+  document.getElementById('gestaoPlacaHint').textContent='Aceita formato antigo e Mercosul';
+  document.getElementById('gestaoPlacaHint').style.color='var(--muted)';
+  validateAll();
+});
+
+// ── Registrar: NI ────────────────────────────────────────────
+document.getElementById('niSubmitBtn').addEventListener('click', () => {
+  const placa = document.getElementById('niPlacaInput').value.trim();
+  const obs   = document.getElementById('niObsInput').value.trim();
+  gravar({ tipo:'naoident', torre:null, apto:null, nome:null, placa:placa||null, documento:null, destino:null, cargo:null, obs:obs||null, motivo:niMotivoSel });
+  showToast('⚠️ Entrada não identificada registrada');
+
+  document.getElementById('niPlacaInput').value='';
+  document.getElementById('niPlacaHint').textContent='Aceita formato antigo e Mercosul';
+  document.getElementById('niPlacaHint').style.color='var(--muted)';
+  document.getElementById('niObsInput').value='';
+  document.getElementById('niMotivos').querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  niMotivoSel=null; validateAll();
+});
+
+function gravar(campos) {
   const list = loadRegistros();
-  const f    = filter.trim().toUpperCase();
-  const fil  = f ? list.filter(r =>
-    (r.placa||'').includes(f) ||
-    String(r.torre||'').includes(f) ||
-    String(r.apto||'').includes(f) ||
-    (r.nome||'').toUpperCase().includes(f) ||
-    (r.motivo||'').toUpperCase().includes(f)
-  ) : list;
+  list.unshift({ id: uid(), entrada: Date.now(), saida: null, ...campos });
+  saveRegistros(list);
+  if (campos.torre && campos.apto && campos.nome) rememberNome(campos.torre, campos.apto, campos.nome);
+  updateCounts();
+}
+
+// ── Renderizar: No pátio ──────────────────────────────────────
+function renderDentro(filter='') {
+  const list = loadRegistros().filter(r=>!r.saida);
+  const f = filter.trim().toUpperCase();
+  const fil = f ? list.filter(r=>searchMatch(r,f)) : list;
+  const c = document.getElementById('listDentro');
+  c.innerHTML='';
+  if(!fil.length){c.innerHTML=`<div class="list-empty"><span class="big">🅿️</span>${f?'Nada encontrado.':'Nenhum veículo no pátio agora.'}</div>`;return;}
+  fil.forEach(r=>c.appendChild(buildCard(r,true)));
+}
+
+function renderHistorico(filter='') {
+  const list = loadRegistros();
+  const f = filter.trim().toUpperCase();
+  const fil = f ? list.filter(r=>searchMatch(r,f)) : list;
   const c = document.getElementById('listHistorico');
-  c.innerHTML = '';
-  if (!fil.length) {
-    c.innerHTML = `<div class="list-empty"><span class="big">📋</span>${f?'Nada encontrado.':'Nenhum registro ainda.'}</div>`;
-    return;
-  }
-  let lastDay = null;
-  fil.forEach(r => {
-    const dl = formatData(r.entrada);
-    if (dl !== lastDay) {
-      const div = document.createElement('div');
-      div.className = 'day-divider';
-      div.textContent = isSameDay(r.entrada, Date.now()) ? `Hoje · ${dl}` : dl;
-      c.appendChild(div);
-      lastDay = dl;
+  c.innerHTML='';
+  if(!fil.length){c.innerHTML=`<div class="list-empty"><span class="big">📋</span>${f?'Nada encontrado.':'Nenhum registro ainda.'}</div>`;return;}
+  let lastDay=null;
+  fil.forEach(r=>{
+    const dl=formatData(r.entrada);
+    if(dl!==lastDay){
+      const div=document.createElement('div');div.className='day-divider';
+      div.textContent=isSameDay(r.entrada,Date.now())?`Hoje · ${dl}`:dl;
+      c.appendChild(div);lastDay=dl;
     }
-    c.appendChild(buildCard(r, false));
+    c.appendChild(buildCard(r,false));
   });
+}
+
+function searchMatch(r,f){
+  return (r.placa||'').includes(f)
+    || String(r.torre||'').includes(f)
+    || String(r.apto||'').includes(f)
+    || (r.nome||'').toUpperCase().includes(f)
+    || (r.motivo||'').toUpperCase().includes(f)
+    || (r.cargo||'').toUpperCase().includes(f)
+    || (r.destino||'').toUpperCase().includes(f);
 }
 
 // ── Card ─────────────────────────────────────────────────────
 function buildCard(r, showSaidaBtn) {
-  const isNI = r.tipo === 'naoident';
+  const isNI = r.tipo==='naoident';
+  const isG  = r.tipo==='gestao';
   const card = document.createElement('div');
-  card.className = 'card' + (r.saida ? ' saiu' : '') + (isNI ? ' card-ni' : '');
+  card.className = 'card'+(r.saida?' saiu':'')+(isNI?' card-ni':'')+(isG?' card-gestao':'');
 
-  const tag = document.createElement('div');
-  const icones = { morador:'🏠', visitante:'🚪', prestador:'🔧', naoident:'⚠️' };
-  tag.className   = `tag ${r.tipo}`;
-  tag.textContent = icones[r.tipo] || '🚗';
+  const icones={morador:'🏠',visitante:'🚪',prestador:'🔧',gestao:'👔',naoident:'⚠️'};
+  const tag=document.createElement('div');
+  tag.className=`tag ${r.tipo}`;tag.textContent=icones[r.tipo]||'🚗';
   card.appendChild(tag);
 
-  const body = document.createElement('div');
-  body.className = 'body';
+  const body=document.createElement('div');body.className='body';
 
-  // Linha 1: placa + hora
-  const row1 = document.createElement('div');
-  row1.className = 'row1';
-  const placaLabel = isNI ? (r.placa || 'SEM PLACA') : r.placa;
-  row1.innerHTML = `<span class="placa">${placaLabel}</span><span class="hora">${formatHora(r.entrada)}</span>`;
+  const row1=document.createElement('div');row1.className='row1';
+  const placaLabel=r.placa||(isNI?'SEM PLACA':'');
+  row1.innerHTML=`<span class="placa">${placaLabel}</span><span class="hora">${formatHora(r.entrada)}</span>`;
   body.appendChild(row1);
 
-  // Meta
-  const meta = document.createElement('div');
-  meta.className = 'meta';
-  if (isNI) {
-    meta.innerHTML = `<b style="color:var(--warn)">${r.motivo}</b>`;
+  const meta=document.createElement('div');meta.className='meta';
+  if(isNI){
+    meta.innerHTML=`<b style="color:var(--warn)">${r.motivo}</b>`;
+  } else if(isG){
+    meta.innerHTML=`<b style="color:var(--teal)">${r.cargo}</b> · <b>${r.nome}</b>${r.torre?` · Torre <b>${r.torre}</b>`:''}`;
+  } else if(r.tipo==='prestador'){
+    let txt=`<b>${r.nome}</b>`;
+    if(r.torre) txt+=` · Torre <b>${r.torre}</b>`;
+    if(r.apto)  txt+=`, Apto <b>${r.apto}</b>`;
+    if(r.destino) txt+=`<br><span style="color:var(--purple);font-size:11px;">📍 ${r.destino}</span>`;
+    meta.innerHTML=txt;
   } else {
-    meta.innerHTML = `Torre <b>${r.torre}</b> · Apto <b>${r.apto}</b> · <b>${r.nome}</b>`;
+    meta.innerHTML=`Torre <b>${r.torre}</b> · Apto <b>${r.apto}</b> · <b>${r.nome}</b>`;
   }
   body.appendChild(meta);
 
-  // Documento (visitante/prestador)
-  if (r.documento) {
-    const de = document.createElement('div');
-    de.style.cssText = 'margin-top:4px;';
-    const ni = r.documento === 'Não informado';
-    de.innerHTML = `<span class="doc-badge${ni?' nao-info':''}">Doc: ${r.documento}</span>`;
+  if(r.documento){
+    const de=document.createElement('div');de.style.cssText='margin-top:4px;';
+    const ni=r.documento==='Não informado';
+    de.innerHTML=`<span class="doc-badge${ni?' nao-info':''}">Doc: ${r.documento}</span>`;
     body.appendChild(de);
   }
 
-  // Observação
-  if (r.obs) {
-    const obsEl = document.createElement('div');
-    obsEl.className = 'obs-line';
-    obsEl.textContent = `💬 ${r.obs}`;
-    body.appendChild(obsEl);
+  if(r.obs){
+    const obsEl=document.createElement('div');obsEl.className='obs-line';
+    obsEl.textContent=`💬 ${r.obs}`;body.appendChild(obsEl);
   }
 
-  // Status
-  const sl = document.createElement('div');
-  if (r.saida) {
-    sl.className   = 'status-line';
-    sl.textContent = `Saiu às ${formatHora(r.saida)} · ficou ${diffDuration(r.entrada, r.saida)}`;
-  } else if (isNI) {
-    sl.className   = 'status-line alerta';
-    sl.textContent = '⚠️ não identificado · no pátio';
-  } else {
-    sl.className   = 'status-line dentro';
-    sl.textContent = '● no pátio';
-  }
+  const sl=document.createElement('div');
+  if(r.saida){sl.className='status-line';sl.textContent=`Saiu às ${formatHora(r.saida)} · ficou ${diffDuration(r.entrada,r.saida)}`;}
+  else if(isNI){sl.className='status-line alerta';sl.textContent='⚠️ não identificado · no pátio';}
+  else if(isG) {sl.className='status-line gestao-status';sl.textContent='● no pátio';}
+  else         {sl.className='status-line dentro';sl.textContent='● no pátio';}
   body.appendChild(sl);
   card.appendChild(body);
 
-  if (showSaidaBtn && !r.saida) {
-    const btn = document.createElement('button');
-    btn.className   = 'btn-saida';
-    btn.textContent = 'Marcar saída';
-    btn.addEventListener('click', () => marcarSaida(r.id));
+  if(showSaidaBtn&&!r.saida){
+    const btn=document.createElement('button');btn.className='btn-saida';btn.textContent='Marcar saída';
+    btn.addEventListener('click',()=>marcarSaida(r.id));
     card.appendChild(btn);
   }
   return card;
 }
 
-function marcarSaida(id) {
-  const list = loadRegistros();
-  const idx  = list.findIndex(r => r.id === id);
-  if (idx === -1) return;
-  list[idx].saida = Date.now();
-  saveRegistros(list);
-  showToast(`✓ Saída registrada — ${list[idx].placa || 'veículo não identificado'}`);
-  renderDentro(document.getElementById('searchDentro').value);
-  updateCounts();
+function marcarSaida(id){
+  const list=loadRegistros();
+  const idx=list.findIndex(r=>r.id===id);if(idx===-1)return;
+  list[idx].saida=Date.now();saveRegistros(list);
+  showToast(`✓ Saída registrada — ${list[idx].placa||list[idx].nome||'veículo'}`);
+  renderDentro(document.getElementById('searchDentro').value);updateCounts();
 }
 
-// ── Buscas ────────────────────────────────────────────────────
-document.getElementById('searchDentro').addEventListener('input',    e => renderDentro(e.target.value));
-document.getElementById('searchHistorico').addEventListener('input', e => renderHistorico(e.target.value));
+document.getElementById('searchDentro').addEventListener('input',    e=>renderDentro(e.target.value));
+document.getElementById('searchHistorico').addEventListener('input', e=>renderHistorico(e.target.value));
 
-// ── Contador ─────────────────────────────────────────────────
-function updateCounts() {
-  document.getElementById('countDentro').textContent = loadRegistros().filter(r => !r.saida).length;
+function updateCounts(){
+  document.getElementById('countDentro').textContent=loadRegistros().filter(r=>!r.saida).length;
 }
 
-// ── Limpar ────────────────────────────────────────────────────
-document.getElementById('clearBtn').addEventListener('click', () => {
-  if (confirm('Apagar todos os registros salvos neste dispositivo? Essa ação não pode ser desfeita.')) {
-    saveRegistros([]);
-    renderHistorico(); renderDentro(); updateCounts();
-    showToast('Registros apagados.');
+document.getElementById('clearBtn').addEventListener('click',()=>{
+  if(confirm('Apagar todos os registros? Essa ação não pode ser desfeita.')){
+    saveRegistros([]);renderHistorico();renderDentro();updateCounts();showToast('Registros apagados.');
   }
 });
 
@@ -430,219 +510,151 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
   if (!list.length) { showToast('Nenhum registro para exportar.'); return; }
 
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: 'pt', format: 'a4' });
-  const pw  = doc.internal.pageSize.getWidth();  // 595pt
-  const ph  = doc.internal.pageSize.getHeight(); // 842pt
-  const mx  = 30;  // margem lateral
-  const TW  = pw - mx * 2; // largura total da tabela: 535pt
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pw  = doc.internal.pageSize.getWidth();
+  const ph  = doc.internal.pageSize.getHeight();
+  const mx  = 30;
+  const TW  = pw - mx * 2;
   let y = 45;
 
-  // ── Cabeçalho do relatório ──────────────────────────────────
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(20);
-  doc.text('Relatório de Controle de Veículos', mx, y); y += 17;
-  doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(100);
-  doc.text('Condomínio Viva Mais Barueri · Portaria', mx, y); y += 13;
-  doc.text(`Gerado em ${formatDataHora(Date.now())}`, mx, y); y += 20;
-  doc.setDrawColor(180); doc.line(mx, y, pw - mx, y); y += 14;
+  doc.setFont('helvetica','bold');doc.setFontSize(15);doc.setTextColor(20);
+  doc.text('Relatório de Controle de Veículos',mx,y);y+=17;
+  doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor(100);
+  doc.text('Condomínio Viva Mais Barueri · Portaria',mx,y);y+=13;
+  doc.text(`Gerado em ${formatDataHora(Date.now())}`,mx,y);y+=20;
+  doc.setDrawColor(180);doc.line(mx,y,pw-mx,y);y+=14;
 
-  // ── Definição de colunas ────────────────────────────────────
-  // Total: 535pt
-  // Tipo(46) Torre(22) Apto(24) Denom(120) Doc/Obs(130) Placa(50) Entrada(72) Saída(71) = 535
-  const cols = [
-    { key:'tipo',    label:'Tipo',        w: 46 },
-    { key:'torre',   label:'Torre',       w: 22 },
-    { key:'apto',    label:'Apto',        w: 24 },
-    { key:'denom',   label:'Denominação', w:120 },
-    { key:'docobs',  label:'Doc./Obs.',   w:130 },
-    { key:'placa',   label:'Placa',       w: 50 },
-    { key:'entrada', label:'Entrada',     w: 72 },
-    { key:'saida',   label:'Saída',       w: 71 },
+  const cols=[
+    {key:'tipo',    label:'Tipo',        w:50},
+    {key:'torre',   label:'Torre',       w:22},
+    {key:'apto',    label:'Apto',        w:24},
+    {key:'denom',   label:'Denominação', w:110},
+    {key:'docobs',  label:'Doc./Obs.',   w:130},
+    {key:'placa',   label:'Placa',       w:50},
+    {key:'entrada', label:'Entrada',     w:72},
+    {key:'saida',   label:'Saída',       w:77},
   ];
+  let xc=mx; cols.forEach(c=>{c.x=xc;xc+=c.w;});
 
-  // Calcular posição X de cada coluna
-  let xCursor = mx;
-  cols.forEach(c => { c.x = xCursor; xCursor += c.w; });
+  const PAD_X=4,PAD_Y=5,LINE_H=10,FS=7.8,HDR_H=18;
+  const HDR_BG=[30,50,80],HDR_TXT=[255,255,255];
+  const EVEN=[242,245,250],ODD=[255,255,255];
+  const NI_BG=[255,245,235],G_BG=[235,248,245];
+  const GRID=[180,190,205];
 
-  // Padding interno das células
-  const PAD_X = 4;
-  const PAD_Y = 5;
-  const LINE_H = 10; // altura de uma linha de texto (pt)
-  const FONT_SIZE = 7.8;
-  const HDR_H = 18;  // altura do cabeçalho
-
-  // Cor do cabeçalho: azul-ardósia escuro
-  const HDR_BG  = [30, 50, 80];   // RGB
-  const HDR_TXT = [255,255,255];
-  // Alternância de linhas
-  const ROW_BG_ODD  = [255,255,255];
-  const ROW_BG_EVEN = [242,245,250];
-  // Linha NI: fundo levemente alaranjado
-  const ROW_BG_NI   = [255,245,235];
-  // Cor da borda da grade
-  const GRID_COLOR  = [180,190,205];
-
-  // ── Cabeçalho da tabela ─────────────────────────────────────
-  function drawTableHeader() {
-    // Fundo do cabeçalho
-    doc.setFillColor(...HDR_BG);
-    doc.rect(mx, y, TW, HDR_H, 'F');
-
-    // Texto do cabeçalho
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(FONT_SIZE);
-    doc.setTextColor(...HDR_TXT);
-    cols.forEach(c => {
-      doc.text(c.label, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
-    });
-
-    // Bordas verticais do cabeçalho
-    doc.setDrawColor(...GRID_COLOR);
-    doc.setLineWidth(0.4);
-    cols.forEach(c => doc.line(c.x, y, c.x, y + HDR_H));
-    doc.line(pw - mx, y, pw - mx, y + HDR_H); // borda direita
-    // Bordas horizontais
-    doc.line(mx, y,         pw - mx, y);
-    doc.line(mx, y + HDR_H, pw - mx, y + HDR_H);
-
-    y += HDR_H;
+  function drawHeader(){
+    doc.setFillColor(...HDR_BG);doc.rect(mx,y,TW,HDR_H,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.setTextColor(...HDR_TXT);
+    cols.forEach(c=>doc.text(c.label,c.x+PAD_X,y+PAD_Y+LINE_H-2));
+    doc.setDrawColor(...GRID);doc.setLineWidth(0.4);
+    cols.forEach(c=>doc.line(c.x,y,c.x,y+HDR_H));
+    doc.line(pw-mx,y,pw-mx,y+HDR_H);
+    doc.line(mx,y,pw-mx,y);doc.line(mx,y+HDR_H,pw-mx,y+HDR_H);
+    y+=HDR_H;
   }
-  drawTableHeader();
+  drawHeader();
 
-  // ── Linhas de dados ─────────────────────────────────────────
-  const tipoLabel = { morador:'Morador', visitante:'Visitante', prestador:'Prestador', naoident:'Não ident.' };
-  let rowIndex = 0;
+  const tipoLabel={morador:'Morador',visitante:'Visitante',prestador:'Prestador',gestao:'Gestão',naoident:'Não ident.'};
+  let ri=0;
 
-  list.slice().reverse().forEach(r => {
-    const isNI = r.tipo === 'naoident';
+  list.slice().reverse().forEach(r=>{
+    const isNI=r.tipo==='naoident', isG=r.tipo==='gestao';
 
-    // Montar texto de cada célula
-    const denomStr   = isNI ? (r.motivo || '') : (r.nome || '');
-    const placaStr   = r.placa || (isNI ? 'S/ PLACA' : '');
-    const entradaStr = fmtCurto(r.entrada);
-    const saidaStr   = r.saida ? fmtCurto(r.saida) : 'No pátio';
+    // Denominação: nome ou cargo+nome ou motivo
+    let denomStr='';
+    if(isNI)      denomStr=r.motivo||'';
+    else if(isG)  denomStr=`${r.cargo}: ${r.nome}`;
+    else          denomStr=r.nome||'';
 
-    // Doc./Obs.: documento na primeira linha, obs abaixo (se houver)
-    let docObsStr = r.documento || '';
-    if (r.obs) docObsStr += (docObsStr ? '\n' : '') + r.obs;
+    // Doc/Obs: documento, depois destino (prestador), depois obs
+    let docParts=[];
+    if(r.documento) docParts.push(r.documento);
+    if(r.destino)   docParts.push(`📍 ${r.destino}`);
+    if(r.obs)       docParts.push(r.obs);
+    const docObsStr=docParts.join('\n');
 
-    // Largura interna de cada coluna (descontando padding)
-    const wInner = {};
-    cols.forEach(c => wInner[c.key] = c.w - PAD_X * 2);
+    const placaStr=r.placa||(isNI?'S/ PLACA':'');
+    const wI={};cols.forEach(c=>wI[c.key]=c.w-PAD_X*2);
 
-    // Quebrar textos em linhas
-    doc.setFont('helvetica', 'normal'); doc.setFontSize(FONT_SIZE);
-    const lines = {
-      tipo:    doc.splitTextToSize(tipoLabel[r.tipo] || r.tipo, wInner.tipo),
-      torre:   doc.splitTextToSize(r.torre ? String(r.torre) : '', wInner.torre),
-      apto:    doc.splitTextToSize(r.apto  ? String(r.apto)  : '', wInner.apto),
-      denom:   doc.splitTextToSize(denomStr,   wInner.denom),
-      docobs:  docObsStr
-                 ? docObsStr.split('\n').flatMap(seg => doc.splitTextToSize(seg, wInner.docobs - 8))
-                 : [''],
-      placa:   doc.splitTextToSize(placaStr,   wInner.placa),
-      entrada: doc.splitTextToSize(entradaStr, wInner.entrada),
-      saida:   doc.splitTextToSize(saidaStr,   wInner.saida),
+    doc.setFont('helvetica','normal');doc.setFontSize(FS);
+    const lines={
+      tipo:    doc.splitTextToSize(tipoLabel[r.tipo]||r.tipo, wI.tipo),
+      torre:   doc.splitTextToSize(r.torre?String(r.torre):'', wI.torre),
+      apto:    doc.splitTextToSize(r.apto?String(r.apto):'', wI.apto),
+      denom:   doc.splitTextToSize(denomStr, wI.denom),
+      docobs:  docObsStr ? docObsStr.split('\n').flatMap(s=>doc.splitTextToSize(s,wI.docobs-8)) : [''],
+      placa:   doc.splitTextToSize(placaStr, wI.placa),
+      entrada: doc.splitTextToSize(fmtCurto(r.entrada), wI.entrada),
+      saida:   doc.splitTextToSize(r.saida?fmtCurto(r.saida):'No pátio', wI.saida),
     };
+    const maxL=Math.max(...Object.values(lines).map(l=>l.length),1);
+    const rowH=maxL*LINE_H+PAD_Y*2;
 
-    // Altura da linha: célula mais alta + padding vertical
-    const maxL  = Math.max(...Object.values(lines).map(l => l.length), 1);
-    const rowH  = maxL * LINE_H + PAD_Y * 2;
+    if(y+rowH>ph-40){doc.addPage();y=30;drawHeader();ri=0;}
 
-    // Nova página se necessário
-    if (y + rowH > ph - 40) { doc.addPage(); y = 30; drawTableHeader(); rowIndex = 0; }
-
-    // Fundo da linha
-    const bg = isNI ? ROW_BG_NI : (rowIndex % 2 === 0 ? ROW_BG_ODD : ROW_BG_EVEN);
-    doc.setFillColor(...bg);
-    doc.rect(mx, y, TW, rowH, 'F');
-
-    // Texto de cada célula — bold apenas para NI (destaque)
+    const bg=isNI?NI_BG:isG?G_BG:(ri%2===0?ODD:EVEN);
+    doc.setFillColor(...bg);doc.rect(mx,y,TW,rowH,'F');
     doc.setTextColor(20);
-    cols.forEach(c => {
-      const cellLines = lines[c.key];
-      if (!cellLines || cellLines.every(l => !l)) return;
-      if (isNI) {
-        doc.setFont('helvetica', 'bold');
+
+    cols.forEach(c=>{
+      const cl=lines[c.key];
+      if(!cl||cl.every(l=>!l)) return;
+      if(isNI||isG) doc.setFont('helvetica','bold'); else doc.setFont('helvetica','normal');
+      doc.setFontSize(FS);
+      // Doc/Obs: primeira parte normal, resto itálico
+      if(c.key==='docobs'&&docParts.length>1){
+        let lineIdx=0;
+        docParts.forEach((part,pi)=>{
+          const partLines=doc.splitTextToSize(part,wI.docobs-8);
+          if(pi===0) doc.setFont('helvetica',isNI||isG?'bold':'normal');
+          else       doc.setFont('helvetica',isNI||isG?'bolditalic':'italic'),doc.setTextColor(80);
+          if(partLines.some(l=>l)) doc.text(partLines,c.x+PAD_X,y+PAD_Y+LINE_H-2+lineIdx*LINE_H);
+          lineIdx+=partLines.length;
+          doc.setTextColor(20);
+        });
       } else {
-        doc.setFont('helvetica', 'normal');
-      }
-      doc.setFontSize(FONT_SIZE);
-      // Texto da célula Doc./Obs.: doc em normal, obs em itálico
-      if (c.key === 'docobs' && r.obs && r.documento) {
-        const docPart = doc.splitTextToSize(r.documento, wInner.docobs);
-        const obsPart = docObsStr.split('\n').slice(1).flatMap(seg => doc.splitTextToSize(seg, wInner.docobs));
-        doc.setFont('helvetica', isNI ? 'bolditalic' : 'normal');
-        doc.text(docPart, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
-        doc.setFont('helvetica', isNI ? 'bolditalic' : 'italic');
-        doc.setTextColor(80);
-        if (obsPart.length) doc.text(obsPart, c.x + PAD_X, y + PAD_Y + LINE_H - 2 + docPart.length * LINE_H);
-        doc.setTextColor(20);
-      } else {
-        // Obs sozinha (sem doc) → itálico
-        if (c.key === 'docobs' && r.obs && !r.documento) {
-          doc.setFont('helvetica', isNI ? 'bolditalic' : 'italic');
-          doc.setTextColor(80);
+        if(c.key==='docobs'&&r.obs&&!r.documento&&!r.destino){
+          doc.setFont('helvetica',isNI||isG?'bolditalic':'italic');doc.setTextColor(80);
         }
-        doc.text(cellLines, c.x + PAD_X, y + PAD_Y + LINE_H - 2);
-        doc.setTextColor(20);
+        doc.text(cl,c.x+PAD_X,y+PAD_Y+LINE_H-2);doc.setTextColor(20);
       }
     });
 
-    // Grade: bordas verticais da linha
-    doc.setDrawColor(...GRID_COLOR);
-    doc.setLineWidth(0.3);
-    cols.forEach(c => {
-      doc.line(c.x, y, c.x, y + rowH);
-    });
-    doc.line(pw - mx, y, pw - mx, y + rowH); // borda direita
-    // Borda inferior da linha
-    doc.setLineWidth(0.3);
-    doc.line(mx, y + rowH, pw - mx, y + rowH);
-
-    y += rowH;
-    rowIndex++;
+    doc.setDrawColor(...GRID);doc.setLineWidth(0.3);
+    cols.forEach(c=>doc.line(c.x,y,c.x,y+rowH));
+    doc.line(pw-mx,y,pw-mx,y+rowH);doc.line(mx,y+rowH,pw-mx,y+rowH);
+    y+=rowH;ri++;
   });
-
-  // Borda externa da tabela (topo já desenhado no header)
-  doc.setDrawColor(...GRID_COLOR);
-  doc.setLineWidth(0.5);
-  doc.rect(mx, y - (y - 45), TW, y - 45); // cobre toda a tabela — omitir, grade já fecha
 
   doc.save(`controle-veiculos-${formatData(Date.now()).replace(/\//g,'-')}.pdf`);
   showToast('✓ PDF gerado — verifique os downloads');
 });
 
 // ── Online/offline ────────────────────────────────────────────
-function updateOnlineStatus() {
-  const pill = document.getElementById('statusPill');
-  const text = document.getElementById('statusText');
-  if (navigator.onLine) { pill.classList.remove('offline'); text.textContent = 'online'; }
-  else { pill.classList.add('offline'); text.textContent = 'offline · salvando local'; }
+function updateOnlineStatus(){
+  const pill=document.getElementById('statusPill'),text=document.getElementById('statusText');
+  if(navigator.onLine){pill.classList.remove('offline');text.textContent='online';}
+  else{pill.classList.add('offline');text.textContent='offline · salvando local';}
 }
-window.addEventListener('online',  updateOnlineStatus);
-window.addEventListener('offline', updateOnlineStatus);
+window.addEventListener('online',updateOnlineStatus);
+window.addEventListener('offline',updateOnlineStatus);
 
-// ── PWA Install ───────────────────────────────────────────────
 let deferredPrompt;
-const installBar = document.getElementById('installBar');
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault(); deferredPrompt = e;
-  if (!localStorage.getItem('cv_install_dismissed')) installBar.classList.remove('hidden');
+const installBar=document.getElementById('installBar');
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;
+  if(!localStorage.getItem('cv_install_dismissed'))installBar.classList.remove('hidden');
 });
-document.getElementById('installBtn').addEventListener('click', async () => {
+document.getElementById('installBtn').addEventListener('click',async()=>{
   installBar.classList.add('hidden');
-  if (deferredPrompt) { deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt = null; }
+  if(deferredPrompt){deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;}
 });
-document.getElementById('installClose').addEventListener('click', () => {
-  installBar.classList.add('hidden');
-  localStorage.setItem('cv_install_dismissed', '1');
+document.getElementById('installClose').addEventListener('click',()=>{
+  installBar.classList.add('hidden');localStorage.setItem('cv_install_dismissed','1');
 });
 
-// ── Service Worker ────────────────────────────────────────────
-if ('serviceWorker' in navigator)
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+if('serviceWorker' in navigator)
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 // ── Init ──────────────────────────────────────────────────────
-updateOnlineStatus();
-updateCounts();
-validateForm();
+updateOnlineStatus();updateCounts();validateAll();
