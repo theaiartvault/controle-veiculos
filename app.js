@@ -526,10 +526,10 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
 
   const cols=[
     {key:'tipo',    label:'Tipo',        w:50},
-    {key:'torre',   label:'Torre',       w:22},
-    {key:'apto',    label:'Apto',        w:24},
-    {key:'denom',   label:'Denominação', w:110},
-    {key:'docobs',  label:'Doc./Obs.',   w:130},
+    {key:'torre',   label:'Torre',       w:28},
+    {key:'apto',    label:'Apto',        w:28},
+    {key:'denom',   label:'Denominação', w:106},
+    {key:'docobs',  label:'Doc./Obs.',   w:124},
     {key:'placa',   label:'Placa',       w:50},
     {key:'entrada', label:'Entrada',     w:72},
     {key:'saida',   label:'Saída',       w:77},
