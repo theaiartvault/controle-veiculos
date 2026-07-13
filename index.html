@@ -207,13 +207,27 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
       <input type="text" id="placaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
       <div class="placa-hint" id="placaHint">Aceita formato antigo e Mercosul</div>
 
-      <div class="doc-block" id="docBlock" style="display:none;">
-        <div class="field-label">Documento</div>
+      <!-- Documento — sempre visível para Morador -->
+      <div class="doc-block" id="docBlock">
+        <div class="field-label">Documento <span class="opt">(opcional)</span></div>
         <div class="doc-toggle">
           <button class="on" id="docBtnInformar">📋 Informar RG / CPF</button>
           <button id="docBtnNao" class="nao-info">🚫 Não informado</button>
         </div>
         <input type="text" id="docInput" placeholder="RG ou CPF" inputmode="numeric" autocomplete="off">
+      </div>
+
+      <!-- Chips de observação rápida — aparece para Morador -->
+      <div id="obsChipsBlock" style="display:none;">
+        <div class="field-label" style="margin-top:16px;">Observação rápida <span class="opt">(opcional)</span></div>
+        <div class="destino-chips" id="obsChips">
+          <button class="destino-chip" data-o="Tailgating">Tailgating</button>
+          <button class="destino-chip" data-o="Piggybacking">Piggybacking</button>
+          <button class="destino-chip" data-o="Veículo não cadastrado">Veíc. não cadastrado</button>
+          <button class="destino-chip" data-o="Facial não reconhecida">Facial não reconhecida</button>
+          <button class="destino-chip" data-o="Acompanhante não autorizado">Acomp. não autorizado</button>
+        </div>
+        <input type="text" id="obsInput" placeholder="Ou descreva a observação…" autocomplete="off" style="margin-top:8px;">
       </div>
 
       <button class="submit-btn" id="submitBtn" disabled>Registrar entrada</button>
@@ -289,9 +303,18 @@ input:focus,textarea:focus,select:focus{outline:none;border-color:var(--accent);
       <div class="field-label">Torre <span class="opt">(opcional)</span></div>
       <div class="torre-grid" id="torreGridG"></div>
 
-      <div class="field-label">Placa</div>
+      <div class="field-label">Placa <span class="opt">(opcional)</span></div>
       <input type="text" id="gestaoPlacaInput" placeholder="ABC1234 ou ABC1D23" maxlength="8" autocomplete="off" autocapitalize="characters">
       <div class="placa-hint" id="gestaoPlacaHint">Aceita formato antigo e Mercosul</div>
+
+      <div class="doc-block">
+        <div class="field-label">Documento <span class="opt">(opcional)</span></div>
+        <div class="doc-toggle">
+          <button class="on" id="docBtnInformarG">📋 Informar RG / CPF</button>
+          <button id="docBtnNaoG" class="nao-info">🚫 Não informado</button>
+        </div>
+        <input type="text" id="docInputG" placeholder="RG ou CPF" inputmode="numeric" autocomplete="off" style="font-family:var(--mono);font-size:15px;letter-spacing:.5px;">
+      </div>
 
       <button class="submit-btn teal-btn" id="submitBtnG" disabled>Registrar entrada</button>
     </div>

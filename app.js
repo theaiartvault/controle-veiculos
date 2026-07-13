@@ -86,9 +86,14 @@ function showForm(tipo) {
     document.getElementById('formPadrao').style.display = '';
     const ph = { morador:'Nome do morador', visitante:'Nome do visitante' };
     document.getElementById('nomeInput').placeholder = ph[tipo] || 'Nome';
-    const docBlock = document.getElementById('docBlock');
-    docBlock.style.display = tipo === 'visitante' ? '' : 'none';
-    if (tipo !== 'visitante') document.getElementById('docInput').value = '';
+    // doc: sempre visível (morador opcional, visitante obrigatório)
+    document.getElementById('docBlock').style.display = '';
+    // chips de obs: só para morador
+    document.getElementById('obsChipsBlock').style.display = tipo === 'morador' ? '' : 'none';
+    if (tipo === 'visitante') {
+      document.getElementById('obsInput') && (document.getElementById('obsInput').value = '');
+      document.getElementById('obsChips').querySelectorAll('.destino-chip').forEach(c=>c.classList.remove('on'));
+    }
   } else if (tipo === 'prestador') {
     document.getElementById('formPrestador').style.display = '';
   } else if (tipo === 'gestao') {
@@ -164,7 +169,7 @@ placaFieldSetup('placaInput',      'placaHint');
 placaFieldSetup('placaInputP',     'placaHintP');
 placaFieldSetup('gestaoPlacaInput','gestaoPlacaHint');
 
-// ── Documento: form padrão (visitante) ────────────────────────
+// ── Documento: form padrão (morador/visitante) ───────────────
 document.getElementById('docBtnInformar').addEventListener('click', () => {
   docMode = 'informar';
   document.getElementById('docBtnInformar').classList.add('on');
@@ -181,6 +186,44 @@ document.getElementById('docBtnNao').addEventListener('click', () => {
   validateAll();
 });
 document.getElementById('docInput').addEventListener('input', validateAll);
+
+// ── Documento: form Gestão ────────────────────────────────────
+let docModeG = 'informar';
+document.getElementById('docBtnInformarG').addEventListener('click', () => {
+  docModeG = 'informar';
+  document.getElementById('docBtnInformarG').classList.add('on');
+  document.getElementById('docBtnNaoG').classList.remove('on');
+  document.getElementById('docInputG').style.display = '';
+  validateAll();
+});
+document.getElementById('docBtnNaoG').addEventListener('click', () => {
+  docModeG = 'nao';
+  document.getElementById('docBtnNaoG').classList.add('on');
+  document.getElementById('docBtnInformarG').classList.remove('on');
+  document.getElementById('docInputG').value = '';
+  document.getElementById('docInputG').style.display = 'none';
+  validateAll();
+});
+document.getElementById('docInputG').addEventListener('input', validateAll);
+
+// ── Chips de obs rápida (morador) ─────────────────────────────
+const obsInput = document.getElementById('obsInput');
+document.getElementById('obsChips').querySelectorAll('.destino-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    document.getElementById('obsChips').querySelectorAll('.destino-chip').forEach(c => c.classList.remove('on'));
+    if (obsInput.value === chip.dataset.o) {
+      obsInput.value = '';
+    } else {
+      chip.classList.add('on');
+      obsInput.value = chip.dataset.o;
+    }
+    validateAll();
+  });
+});
+obsInput.addEventListener('input', () => {
+  document.getElementById('obsChips').querySelectorAll('.destino-chip').forEach(c => c.classList.remove('on'));
+  validateAll();
+});
 
 // ── Documento: form prestador ────────────────────────────────
 document.getElementById('docBtnInformarP').addEventListener('click', () => {
@@ -248,12 +291,12 @@ document.getElementById('niPlacaInput').addEventListener('input', () => {
 // ── Validação central ─────────────────────────────────────────
 function validateAll() {
   const t = state.tipo;
-  // Morador
+  // Morador — doc opcional
   if (t === 'morador') {
     const ok = state.torre && aptoInput.value.trim() && nomeInput.value.trim() && document.getElementById('placaInput').value.length >= 6;
     document.getElementById('submitBtn').disabled = !ok;
   }
-  // Visitante
+  // Visitante — doc obrigatório
   if (t === 'visitante') {
     const base = state.torre && aptoInput.value.trim() && nomeInput.value.trim() && document.getElementById('placaInput').value.length >= 6;
     const docOk = docMode === 'nao' || document.getElementById('docInput').value.trim().length >= 3;
@@ -285,11 +328,20 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   const apto  = aptoInput.value.trim();
   const nome  = nomeInput.value.trim();
   const placa = document.getElementById('placaInput').value.trim();
-  const doc   = tipo === 'visitante'
-    ? (docMode === 'nao' ? 'Não informado' : document.getElementById('docInput').value.trim())
-    : null;
 
-  gravar({ tipo, torre, apto, nome, placa, documento: doc, destino: null, cargo: null, obs: null, motivo: null });
+  // Doc: morador (opcional), visitante (obrigatório)
+  let doc = null;
+  const docVal = document.getElementById('docInput').value.trim();
+  if (tipo === 'visitante') {
+    doc = docMode === 'nao' ? 'Não informado' : docVal;
+  } else if (tipo === 'morador' && docVal.length >= 3) {
+    doc = docVal;
+  }
+
+  // Obs: só para morador (chips ou texto livre)
+  const obs = tipo === 'morador' ? (obsInput.value.trim() || null) : null;
+
+  gravar({ tipo, torre, apto, nome, placa, documento: doc, destino: null, cargo: null, obs, motivo: null });
   showToast(`✓ ${placa} registrada — Torre ${torre}, Apto ${apto}`);
 
   // reset
@@ -305,6 +357,8 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   document.getElementById('docBtnInformar').classList.add('on');
   document.getElementById('docBtnNao').classList.remove('on');
   document.getElementById('docInput').style.display='';
+  obsInput.value='';
+  document.getElementById('obsChips').querySelectorAll('.destino-chip').forEach(c=>c.classList.remove('on'));
   validateAll();
 });
 
@@ -343,8 +397,10 @@ document.getElementById('submitBtnG').addEventListener('click', () => {
   const nome  = document.getElementById('gestaoNomeInput').value.trim();
   const torre = state.torraG;
   const placa = document.getElementById('gestaoPlacaInput').value.trim();
+  const docValG = document.getElementById('docInputG').value.trim();
+  const doc   = docModeG === 'nao' ? 'Não informado' : (docValG.length >= 3 ? docValG : null);
 
-  gravar({ tipo:'gestao', torre, apto: null, nome, placa: placa||null, documento: null, destino: null, cargo, obs: null, motivo: null });
+  gravar({ tipo:'gestao', torre, apto: null, nome, placa: placa||null, documento: doc, destino: null, cargo, obs: null, motivo: null });
   showToast(`✓ ${cargo} — ${nome} registrado`);
 
   state.torraG = null;
@@ -354,6 +410,11 @@ document.getElementById('submitBtnG').addEventListener('click', () => {
   document.getElementById('gestaoPlacaInput').value='';
   document.getElementById('gestaoPlacaHint').textContent='Aceita formato antigo e Mercosul';
   document.getElementById('gestaoPlacaHint').style.color='var(--muted)';
+  document.getElementById('docInputG').value='';
+  docModeG='informar';
+  document.getElementById('docBtnInformarG').classList.add('on');
+  document.getElementById('docBtnNaoG').classList.remove('on');
+  document.getElementById('docInputG').style.display='';
   validateAll();
 });
 
@@ -525,18 +586,18 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
   doc.setDrawColor(180);doc.line(mx,y,pw-mx,y);y+=14;
 
   const cols=[
-    {key:'tipo',    label:'Tipo',        w:50},
-    {key:'torre',   label:'Torre',       w:28},
-    {key:'apto',    label:'Apto',        w:28},
-    {key:'denom',   label:'Denominação', w:106},
-    {key:'docobs',  label:'Doc./Obs.',   w:124},
+    {key:'tipo',    label:'Tipo',        w:48},
+    {key:'torre',   label:'Torre',       w:33},
+    {key:'apto',    label:'Apto',        w:33},
+    {key:'denom',   label:'Denominação', w:104},
+    {key:'docobs',  label:'Doc./Obs.',   w:118},
     {key:'placa',   label:'Placa',       w:50},
     {key:'entrada', label:'Entrada',     w:72},
     {key:'saida',   label:'Saída',       w:77},
   ];
   let xc=mx; cols.forEach(c=>{c.x=xc;xc+=c.w;});
 
-  const PAD_X=4,PAD_Y=5,LINE_H=10,FS=7.8,HDR_H=18;
+  const PAD_X=4,PAD_Y=5,LINE_H=10,FS=7.5,HDR_FS=7.2,HDR_H=18;
   const HDR_BG=[30,50,80],HDR_TXT=[255,255,255];
   const EVEN=[242,245,250],ODD=[255,255,255];
   const NI_BG=[255,245,235],G_BG=[235,248,245];
@@ -544,7 +605,7 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
 
   function drawHeader(){
     doc.setFillColor(...HDR_BG);doc.rect(mx,y,TW,HDR_H,'F');
-    doc.setFont('helvetica','bold');doc.setFontSize(FS);doc.setTextColor(...HDR_TXT);
+    doc.setFont('helvetica','bold');doc.setFontSize(HDR_FS);doc.setTextColor(...HDR_TXT);
     cols.forEach(c=>doc.text(c.label,c.x+PAD_X,y+PAD_Y+LINE_H-2));
     doc.setDrawColor(...GRID);doc.setLineWidth(0.4);
     cols.forEach(c=>doc.line(c.x,y,c.x,y+HDR_H));
@@ -560,17 +621,17 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
   list.slice().reverse().forEach(r=>{
     const isNI=r.tipo==='naoident', isG=r.tipo==='gestao';
 
-    // Denominação: nome ou cargo+nome ou motivo
+    // Denominação: nome (todos) ou motivo (NI)
     let denomStr='';
-    if(isNI)      denomStr=r.motivo||'';
-    else if(isG)  denomStr=`${r.cargo}: ${r.nome}`;
-    else          denomStr=r.nome||'';
+    if(isNI) denomStr=r.motivo||'';
+    else     denomStr=r.nome||'';
 
-    // Doc/Obs: documento, depois destino (prestador), depois obs
+    // Doc/Obs: documento, cargo (gestão como obs), destino (prestador), obs livre
     let docParts=[];
-    if(r.documento) docParts.push(r.documento);
-    if(r.destino)   docParts.push(`📍 ${r.destino}`);
-    if(r.obs)       docParts.push(r.obs);
+    if(r.documento)                 docParts.push(r.documento);
+    if(isG && r.cargo)              docParts.push(`Cargo: ${r.cargo}`);
+    if(r.destino)                   docParts.push(`Dest: ${r.destino}`);
+    if(r.obs)                       docParts.push(r.obs);
     const docObsStr=docParts.join('\n');
 
     const placaStr=r.placa||(isNI?'S/ PLACA':'');
