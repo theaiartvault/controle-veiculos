@@ -727,4 +727,9 @@ if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 // ── Init ──────────────────────────────────────────────────────
-updateOnlineStatus();updateCounts();showForm('morador');validateAll();
+document.addEventListener('DOMContentLoaded', () => {
+  updateOnlineStatus();
+  updateCounts();
+  showForm('morador');
+  validateAll();
+});
