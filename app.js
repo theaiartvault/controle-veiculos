@@ -687,7 +687,16 @@ document.getElementById('exportPdfBtn').addEventListener('click', () => {
     y+=rowH;ri++;
   });
 
-  doc.save(`controle-veiculos-${formatData(Date.now()).replace(/\//g,'-')}.pdf`);
+  // Download nativo — cria link <a> com blob URL para disparar a barra de download do navegador
+  const blob = doc.output('blob');
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `controle-veiculos-${formatData(Date.now()).replace(/\//g,'-')}.pdf`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
   showToast('✓ PDF gerado — verifique os downloads');
 });
 
@@ -718,4 +727,4 @@ if('serviceWorker' in navigator)
   window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
 
 // ── Init ──────────────────────────────────────────────────────
-updateOnlineStatus();updateCounts();validateAll();
+updateOnlineStatus();updateCounts();showForm('morador');validateAll();
